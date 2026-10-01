@@ -226,11 +226,18 @@ Notes:
 
 ## M8 — Reports API (R1–R2)
 
-- [ ] R1 report — week (Mon–Sun) / month in IST, `date` anchor, optional `groupId`; paid, my share, settlements paid/received; expense + settlement rows
-- [ ] R2 CSV — streamed, RFC 4180 escaping, formula-injection guard, UTF-8 BOM, filename
-- [ ] Tests: period boundaries (week across months, month ends), group filter, E25–E26, CSV escaping
+- [x] R1 report — week (Mon–Sun) / month in IST, `date` anchor, optional `groupId`; paid, my share, settlements paid/received; expense + settlement rows
+- [x] R2 CSV — streamed, RFC 4180 escaping, formula-injection guard, UTF-8 BOM, filename
+- [x] Tests: period boundaries (week across months, month ends), group filter, E25–E26, CSV escaping
 
-**Checkpoint M8:** download a CSV from seed data and open it in a spreadsheet.
+Notes:
+- Reports cover the caller's **current** groups only (same access rule as everything else); `groupId` of a group they're not in → 404.
+- CSV written by a small in-house serializer (`modules/reports/csv.js`) instead of csv-stringify — RFC 4180 quoting, formula-injection guard (`'` prefix for = + - @ tab CR), UTF-8 BOM, CRLF, rows oldest first. Report is small, so it's built in memory rather than streamed.
+- Filename `report-<week|month>-<period start>.csv`. Settlement rows: description = note (or "Payment to X"), payer = who paid.
+- Shared `formatPeriodLabel` added ("28 Sep – 4 Oct 2026", "October 2026").
+- 211 server tests, 127 shared tests.
+
+**Checkpoint M8 ✅:** download a CSV from seed data and open it in a spreadsheet.
 
 **Backend complete.**
 

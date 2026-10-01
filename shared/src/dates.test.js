@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatDate,
   formatDateTime,
+  formatPeriodLabel,
   isFutureDate,
   isValidDateString,
   monthRange,
@@ -77,5 +78,15 @@ describe('formatting', () => {
   it('formats a UTC instant in IST, 24-hour', () => {
     expect(formatDateTime('2026-09-30T16:15:00.000Z')).toBe('30 Sep 2026, 21:45');
     expect(formatDateTime('2026-09-30T19:00:00.000Z')).toBe('1 Oct 2026, 00:30');
+  });
+});
+
+describe('formatPeriodLabel', () => {
+  it.each([
+    ['week', '2026-09-28', '2026-10-04', '28 Sep – 4 Oct 2026'],
+    ['week', '2026-12-28', '2027-01-03', '28 Dec 2026 – 3 Jan 2027'],
+    ['month', '2026-10-01', '2026-10-31', 'October 2026'],
+  ])('%s %s..%s → %s', (type, from, to, label) => {
+    expect(formatPeriodLabel(type, from, to)).toBe(label);
   });
 });

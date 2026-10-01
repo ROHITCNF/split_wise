@@ -16,6 +16,7 @@ import { balanceRoutes } from './modules/balances/routes.js';
 import { dashboardRoutes } from './modules/dashboard/routes.js';
 import { activityRoutes, settlementRoutes } from './modules/settlements/routes.js';
 import { notificationRoutes } from './modules/notifications/routes.js';
+import { reportRoutes } from './modules/reports/routes.js';
 import { requireAuth } from './middleware/session.js';
 import { requireMember } from './middleware/membership.js';
 
@@ -69,6 +70,7 @@ export function createApp(database, { config = defaultConfig, ...services } = {}
   app.use('/api/users', userRoutes(ctx));
   app.use('/api/dashboard', dashboardRoutes(ctx));
   app.use('/api/notifications', notificationRoutes(ctx));
+  app.use('/api/reports', reportRoutes(ctx));
 
   // Group-scoped resources: caller must be an active member (404 otherwise).
   const member = [requireAuth, requireMember(ctx)];

@@ -61,3 +61,30 @@ export function formatDateTime(isoInstant) {
   const minutes = String(ist.getUTCMinutes()).padStart(2, '0');
   return `${formatDate(ist.toISOString().slice(0, 10))}, ${hours}:${minutes}`;
 }
+
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/**
+ * Report period label: week "28 Sep – 4 Oct 2026" (year shown once when shared),
+ * month "October 2026".
+ */
+export function formatPeriodLabel(type, from, to) {
+  const [fromYear, fromMonth] = from.split('-').map(Number);
+  if (type === 'month') return `${MONTH_NAMES[fromMonth - 1]} ${fromYear}`;
+  const toYear = Number(to.slice(0, 4));
+  const start = formatDate(from);
+  return `${fromYear === toYear ? start.slice(0, -5) : start} – ${formatDate(to)}`;
+}

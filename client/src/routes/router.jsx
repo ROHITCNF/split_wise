@@ -3,7 +3,7 @@ import { AuthProvider } from '@/auth/AuthProvider.jsx';
 import { GuestOnly, RequireAuth } from '@/auth/guards.jsx';
 import { ConfirmProvider } from '@/components/ConfirmProvider.jsx';
 import { AppShell } from '@/components/layout/AppShell.jsx';
-import { NotFoundPage, PlaceholderPage } from '@/components/PlaceholderPage.jsx';
+import { NotFoundPage } from '@/components/NotFoundPage.jsx';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { LoginPage } from '@/features/auth/LoginPage.jsx';
@@ -23,6 +23,8 @@ import { ExpenseFormPage } from '@/features/expenses/ExpenseFormPage.jsx';
 import { ExpensesTab } from '@/features/expenses/ExpensesTab.jsx';
 import { SettlementsTab } from '@/features/settlements/SettlementsTab.jsx';
 import { ProfilePage } from '@/features/profile/ProfilePage.jsx';
+import { NotificationsPage } from '@/features/notifications/NotificationsPage.jsx';
+import { ReportsPage } from '@/features/reports/ReportsPage.jsx';
 
 function Root() {
   return (
@@ -36,8 +38,6 @@ function Root() {
     </AuthProvider>
   );
 }
-
-const soon = (title, milestone) => <PlaceholderPage title={title} milestone={milestone} />;
 
 /** Route table (WIREFRAMES §0.3). */
 export const routes = [
@@ -82,8 +82,8 @@ export const routes = [
                   { path: 'expenses/:expenseId/edit', element: <ExpenseFormPage /> },
                 ],
               },
-              { path: '/notifications', element: soon('Notifications', 'M12') },
-              { path: '/reports', element: soon('Reports', 'M12') },
+              { path: '/notifications', element: <NotificationsPage /> },
+              { path: '/reports', element: <ReportsPage /> },
               { path: '/profile', element: <ProfilePage /> },
               { path: '*', element: <NotFoundPage /> },
             ],

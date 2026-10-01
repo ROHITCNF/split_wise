@@ -317,10 +317,17 @@ Notes:
 
 ## M12 — Client screens: notifications, reports
 
-- [ ] §12 Bell popover (latest 5) + Notifications page (all/unread, mark read, deleted-group rows)
-- [ ] §13 Reports — week/month toggle, period nav, group filter, totals, tables, CSV download
+- [x] §12 Bell popover (latest 5) + Notifications page (all/unread, mark read, deleted-group rows)
+- [x] §13 Reports — week/month toggle, period nav, group filter, totals, tables, CSV download
 
-**Checkpoint M12:** full app usable end to end.
+Notes:
+- Bell is now a popover (latest 5, relative times, mark all read, "View all"); it refreshes immediately when the notifications page marks things read (window event), besides the 60 s poll and navigation.
+- Notification links map to: expense → expense page; settlement → Settlements tab; group → Expenses tab; deleted group → disabled row with a "Group deleted" badge.
+- Reports: Week/Month tabs, ‹ › steps from the period start (next disabled for the current period), group filter from G1, CSV is a plain download link with the same query.
+- All placeholder screens removed.
+- 69 client tests.
+
+**Checkpoint M12 ✅:** full app usable end to end.
 
 ---
 

@@ -9,7 +9,8 @@ import { systemRoutes } from './modules/system/routes.js';
 import { authRoutes, devRoutes } from './modules/auth/routes.js';
 import { createConsoleMailer } from './modules/auth/mailer.js';
 import { createMockGoogleProvider } from './modules/auth/mockGoogle.js';
-import { profileRoutes } from './modules/users/routes.js';
+import { profileRoutes, userRoutes } from './modules/users/routes.js';
+import { groupRoutes } from './modules/groups/routes.js';
 
 /**
  * Request pipeline shared by the real app and tests: security headers, logging,
@@ -58,6 +59,8 @@ export function createApp(database, { config = defaultConfig, ...services } = {}
   app.use('/api', systemRoutes(ctx));
   app.use('/api/auth', authRoutes(ctx));
   app.use('/api/me', profileRoutes(ctx));
+  app.use('/api/users', userRoutes(ctx));
+  app.use('/api/groups', groupRoutes(ctx));
   if (!config.isProduction) app.use('/api/dev', devRoutes(ctx));
   applyErrorHandling(app);
 

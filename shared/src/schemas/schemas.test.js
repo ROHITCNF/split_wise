@@ -179,10 +179,8 @@ describe('settlementBody', () => {
 });
 
 describe('groups', () => {
-  it('create needs at least one other member, no duplicates (FR-GRP-02)', () => {
-    expect(
-      fieldErrorsOf(createGroupBody, { name: 'Trip', memberUserIds: [] }).fieldErrors,
-    ).toHaveProperty('memberUserIds');
+  it('create rejects duplicate members; emptiness is left to the server (GROUP_MIN_MEMBERS)', () => {
+    expect(createGroupBody.safeParse({ name: 'Trip', memberUserIds: [] }).success).toBe(true);
     expect(
       fieldErrorsOf(createGroupBody, { name: 'Trip', memberUserIds: [2, 2] }).fieldErrors,
     ).toHaveProperty('memberUserIds');

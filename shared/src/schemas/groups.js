@@ -14,9 +14,10 @@ export const userSearchQuery = z.strictObject({
 export const createGroupBody = z.strictObject({
   name: groupName,
   description: groupDescription,
+  // Emptiness is reported as GROUP_MIN_MEMBERS by the server (API_CONTRACT G2).
   memberUserIds: z
     .array(id)
-    .min(1, 'Add at least one member')
+    .max(100)
     .refine((ids) => new Set(ids).size === ids.length, 'Each person can be added only once'),
 });
 

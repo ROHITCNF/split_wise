@@ -145,7 +145,7 @@ Notes:
 - Mail is sent only after the transaction commits.
 - Login reveals "not verified" only after a correct password; unknown email and wrong password share one response and similar timing (dummy Argon2 verify).
 - Drizzle schema now mirrors `status` defaults (otherwise it inserts NULL).
-- ⚠️ **Pending decision D-18:** account deletion is also blocked (`409 ADMIN_MUST_CHOOSE`, `details.groups`) while the user is admin of any group — otherwise the group would have no admin. Not yet in REQUIREMENTS / API_CONTRACT.
+- ⚠️ **Pending decision D-18** (see TODO below): account deletion is also blocked (`409 ADMIN_MUST_CHOOSE`, `details.groups`) while the user is admin of any group — otherwise the group would have no admin. Not yet in REQUIREMENTS / API_CONTRACT.
 - 100 server tests.
 
 **Checkpoint M4 ✅:** sign up → verify via outbox → log in → mock Google merge, via HTTP client or tests.
@@ -154,19 +154,27 @@ Notes:
 
 ## M5 — Groups & membership API (U1, G1–G5, M1–M3)
 
-- [ ] U1 user search — verified/active only, excludes self and current members, max 10
-- [ ] G1 list my groups with my net balance
-- [ ] G2 create group — ≥ 2 members, creator admin, notifications + activity
-- [ ] G3 group detail with members, past members, my role, nets
-- [ ] G4 edit name/description (any member)
-- [ ] G5 delete group — admin only, confirmation when balances open, notify all, hard delete
-- [ ] M1 add member — admin only, `ALREADY_MEMBER`, `USER_NOT_ELIGIBLE`, re-add = new membership
-- [ ] M2 remove member — admin only, `CANNOT_REMOVE_SELF`, `BALANCE_NOT_ZERO`
-- [ ] M3 leave — member zero-balance guard; admin flow `transfer` / `delete` / `ADMIN_MUST_CHOOSE` / always-confirm delete
+- [x] U1 user search — verified/active only, excludes self and current members, max 10
+- [x] G1 list my groups with my net balance
+- [x] G2 create group — ≥ 2 members, creator admin, notifications + activity
+- [x] G3 group detail with members, past members, my role, nets
+- [x] G4 edit name/description (any member)
+- [x] G5 delete group — admin only, confirmation when balances open, notify all, hard delete
+- [x] M1 add member — admin only, `ALREADY_MEMBER`, `USER_NOT_ELIGIBLE`, re-add = new membership
+- [x] M2 remove member — admin only, `CANNOT_REMOVE_SELF`, `BALANCE_NOT_ZERO`
+- [x] M3 leave — member zero-balance guard; admin flow `transfer` / `delete` / `ADMIN_MUST_CHOOSE` / always-confirm delete
 - [x] Balance calculator module (DATABASE_SCHEMA §6.1–6.2) — done early in M4
-- [ ] Tests: edge cases E15–E20b, E28
+- [x] Tests: edge cases E15–E20b, E28
 
-**Checkpoint M5:** group lifecycle demo through API.
+Notes:
+- Empty `memberUserIds` now reaches the server and returns `400 GROUP_MIN_MEMBERS` (shared schema no longer rejects it); per-request cap of 100 member IDs.
+- A member sending `{ mode: 'delete' }` to leave is treated as a plain leave — only admins can delete.
+- Admin transfer ends the old admin's membership before promoting the new one (one-active-admin index).
+- Group delete notifies members first; the FK cascade then nulls `group_id` on those notifications.
+- User search escapes `%` / `_`, max 10 results, hides current members when `groupId` is given (404 if caller isn't a member).
+- 134 server tests.
+
+**Checkpoint M5 ✅:** group lifecycle demo through API.
 
 ---
 
@@ -280,6 +288,10 @@ Notes:
 **Checkpoint M13:** v1 done.
 
 ---
+
+## TODO — revisit later
+
+- [ ] **D-18: group admin deleting their account.** Current behaviour (M4): `DELETE /api/me` returns `409 ADMIN_MUST_CHOOSE` with `details.groups` while the user is admin of any group; they must use the admin-leave flow first. Product owner to revisit; once decided, update REQUIREMENTS (FR-AUTH-08, v1.3) and API_CONTRACT (P3).
 
 ## Out of scope for this plan
 

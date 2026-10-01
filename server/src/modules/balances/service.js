@@ -11,7 +11,7 @@ const DEBTS_CTE = `
     UNION ALL
     SELECT st.to_membership_id, st.from_membership_id, st.amount_paise
     FROM settlements st
-    WHERE st.group_id = :groupId AND st.status = 'active'
+    WHERE st.group_id = :groupId AND st.status = 'active' AND st.id <> :excludeSettlementId
   )`;
 
 /**
@@ -30,7 +30,7 @@ export function pairBalances(ctx, groupId) {
        )
        SELECT a, b, a_owes_b FROM pairs WHERE a_owes_b <> 0 ORDER BY a, b`,
     )
-    .all({ groupId });
+    .all({ groupId, excludeSettlementId: 0 });
   return rows.map(({ a, b, a_owes_b }) =>
     a_owes_b > 0
       ? { fromMembershipId: a, toMembershipId: b, amountPaise: a_owes_b }
@@ -49,7 +49,22 @@ export function memberNet(ctx, groupId, membershipId) {
        SELECT COALESCE(SUM(CASE WHEN creditor = :m THEN amt WHEN debtor = :m THEN -amt ELSE 0 END), 0) AS net
        FROM debts`,
     )
-    .get({ groupId, m: membershipId }).net;
+    .get({ groupId, m: membershipId, excludeSettlementId: 0 }).net;
+}
+
+/**
+ * How much `from` currently owes `to` (negative when `to` owes `from`), optionally
+ * ignoring one settlement — used for the over-payment warning on edit (FR-STL-03).
+ */
+export function owedBetween(ctx, groupId, from, to, { excludeSettlementId = 0 } = {}) {
+  return ctx.sqlite
+    .prepare(
+      `${DEBTS_CTE}
+       SELECT COALESCE(SUM(CASE WHEN debtor = :from AND creditor = :to THEN amt
+                                WHEN debtor = :to AND creditor = :from THEN -amt ELSE 0 END), 0) AS owed
+       FROM debts`,
+    )
+    .get({ groupId, from, to, excludeSettlementId }).owed;
 }
 
 /**

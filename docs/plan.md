@@ -205,15 +205,22 @@ Notes:
 
 ## M7 — Settlements, activity, notifications API (S1–S6, AC1, N1–N4)
 
-- [ ] S2 record — party-only, from ≠ to, active members, `OVERPAYMENT` confirmation, notify other party
-- [ ] S1 list, S3 detail
-- [ ] S4 edit — overpayment computed excluding this settlement; freeze check
-- [ ] S5 soft delete, S6 history
-- [ ] AC1 activity feed (paginated)
-- [ ] N1 list (`unreadOnly`, `link` null when group deleted), N2 unread count, N3 mark read (recipient only), N4 mark all
-- [ ] Tests: E12–E14, E29; notification recipients per DOMAIN §2.11 table
+- [x] S2 record — party-only, from ≠ to, active members, `OVERPAYMENT` confirmation, notify other party
+- [x] S1 list, S3 detail
+- [x] S4 edit — overpayment computed excluding this settlement; freeze check
+- [x] S5 soft delete, S6 history
+- [x] AC1 activity feed (paginated)
+- [x] N1 list (`unreadOnly`, `link` null when group deleted), N2 unread count, N3 mark read (recipient only), N4 mark all
+- [x] Tests: E12–E14, E29; notification recipients per DOMAIN §2.11 table
 
-**Checkpoint M7:** full money loop: expense → balance → settle up → zero.
+Notes:
+- Over-payment check uses `owedBetween(…, { excludeSettlementId })` so editing a settlement compares against the balance without it; paying someone you owe nothing reports `owedPaise: 0`.
+- Recorder wording differs: payer → "recorded a payment of ₹X to you"; receiver → "recorded that you paid ₹X".
+- Notification links: `{ type, groupId, id }`; group-type rows link to the group; `null` after group deletion.
+- Seed still writes rows directly (no notifications); switching it to services left as a nice-to-have.
+- 191 server tests.
+
+**Checkpoint M7 ✅:** full money loop: expense → balance → settle up → zero.
 
 ---
 

@@ -161,3 +161,9 @@ I will revisit this group admin deleting their account add in to do as plan and 
 ## Prompt 25 — 2026-10-01
 
 start m6
+
+---
+
+## Prompt 26 — 2026-10-01
+
+start m7 and m8 one by one

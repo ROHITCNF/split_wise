@@ -274,14 +274,23 @@ Notes:
 
 ## M10 — Client screens: auth, profile, dashboard, groups
 
-- [ ] §2 Log in, Sign up, Check-your-email (dev outbox link), Verify landing
-- [ ] §3 Profile — name, password (hidden for Google-only), logout, delete account with type-DELETE + blocked-balances dialog
-- [ ] §4 Dashboard — totals, groups, recent activity, empty state
-- [ ] §5 Group list + create group with member search
-- [ ] §6 Group detail frame, header actions, tabs, Settings tab
-- [ ] §7 Members tab, add member, remove, leave, admin-leave dialog, delete group (type group name)
+- [x] §2 Log in, Sign up, Check-your-email (dev outbox link), Verify landing
+- [x] §3 Profile — name, password (hidden for Google-only), logout, delete account with type-DELETE + blocked-balances dialog
+- [x] §4 Dashboard — totals, groups, recent activity, empty state
+- [x] §5 Group list + create group with member search
+- [x] §6 Group detail frame, header actions, tabs, Settings tab
+- [x] §7 Members tab, add member, remove, leave, admin-leave dialog, delete group (type group name)
 
-**Checkpoint M10:** click through account + group flows in the browser.
+Notes:
+- Shared UI: `components/common.jsx` (PageHeader, ErrorState, EmptyState, LoadingRows, Money, BalanceText, Pager, DateField, TypeToConfirmDialog, useRefetchOnFocus, useDebounced) and `MemberSearch` (U1, debounced).
+- Group screens load G3 once in `GroupLoader` and share it via `useGroup()`; refetched when the tab regains focus.
+- Signup uses React Hook Form + the shared `signupBody` schema; verify page guards the single-use token against StrictMode double effects.
+- Account deletion also handles `ADMIN_MUST_CHOOSE` (D-18 behaviour) with links to each group's settings.
+- Header "Settle up" links to the Balances tab until the dialog lands in M11.
+- Bug caught by tests: `MemberSearch` "Add" button submitted the surrounding form — now `type="button"`.
+- 47 client tests (fake API in `src/test/utils.jsx`).
+
+**Checkpoint M10 ✅:** click through account + group flows in the browser.
 
 ---
 

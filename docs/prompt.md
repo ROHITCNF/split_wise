@@ -173,3 +173,9 @@ start m7 and m8 one by one
 ## Prompt 27 — 2026-10-01
 
 start m9
+
+---
+
+## Prompt 28 — 2026-10-01
+
+start m10 m11 and m12 all together

@@ -7,6 +7,7 @@ export {
   formatPeriodLabel,
   truncate,
 } from '@splitbook/shared';
+import { formatDateTime as formatDateTimeShared } from '@splitbook/shared';
 
 /** Tailwind text colour for a balance: red = you owe, green = owed to you, grey = settled. */
 export function balanceTone(netPaise) {
@@ -31,4 +32,9 @@ export function initials(name = '') {
     .slice(0, 2)
     .map((part) => part[0].toUpperCase())
     .join('');
+}
+
+/** Calendar day (IST) of a UTC instant: "2026-09-30T20:00Z" → "1 Oct 2026". */
+export function formatInstantDate(isoInstant) {
+  return formatDateTimeShared(isoInstant).split(',')[0];
 }

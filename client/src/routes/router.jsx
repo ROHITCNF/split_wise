@@ -7,6 +7,16 @@ import { NotFoundPage, PlaceholderPage } from '@/components/PlaceholderPage.jsx'
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { LoginPage } from '@/features/auth/LoginPage.jsx';
+import { SignupPage } from '@/features/auth/SignupPage.jsx';
+import { VerifyPage } from '@/features/auth/VerifyPage.jsx';
+import { DashboardPage } from '@/features/dashboard/DashboardPage.jsx';
+import { GroupLoader } from '@/features/groups/GroupContext.jsx';
+import { GroupLayout } from '@/features/groups/GroupLayout.jsx';
+import { GroupsPage } from '@/features/groups/GroupsPage.jsx';
+import { NewGroupPage } from '@/features/groups/NewGroupPage.jsx';
+import { SettingsTab } from '@/features/groups/SettingsTab.jsx';
+import { MembersTab } from '@/features/members/MembersTab.jsx';
+import { ProfilePage } from '@/features/profile/ProfilePage.jsx';
 
 function Root() {
   return (
@@ -32,30 +42,43 @@ export const routes = [
         element: <GuestOnly />,
         children: [
           { path: '/login', element: <LoginPage /> },
-          { path: '/signup', element: soon('Sign up', 'M10') },
+          { path: '/signup', element: <SignupPage /> },
         ],
       },
-      { path: '/verify', element: soon('Verify email', 'M10') },
+      { path: '/verify', element: <VerifyPage /> },
       {
         element: <RequireAuth />,
         children: [
           {
             element: <AppShell />,
             children: [
-              { path: '/', element: soon('Dashboard', 'M10') },
-              { path: '/groups', element: soon('Groups', 'M10') },
-              { path: '/groups/new', element: soon('New group', 'M10') },
-              { path: '/groups/:groupId', element: <Navigate to="expenses" replace /> },
-              { path: '/groups/:groupId/expenses/new', element: soon('Add expense', 'M11') },
-              { path: '/groups/:groupId/expenses/:expenseId', element: soon('Expense', 'M11') },
+              { path: '/', element: <DashboardPage /> },
+              { path: '/groups', element: <GroupsPage /> },
+              { path: '/groups/new', element: <NewGroupPage /> },
               {
-                path: '/groups/:groupId/expenses/:expenseId/edit',
-                element: soon('Edit expense', 'M11'),
+                path: '/groups/:groupId',
+                element: <GroupLoader />,
+                children: [
+                  {
+                    element: <GroupLayout />,
+                    children: [
+                      { index: true, element: <Navigate to="expenses" replace /> },
+                      { path: 'expenses', element: soon('Expenses', 'M11') },
+                      { path: 'balances', element: soon('Balances', 'M11') },
+                      { path: 'settlements', element: soon('Settlements', 'M11') },
+                      { path: 'activity', element: soon('Activity', 'M11') },
+                      { path: 'members', element: <MembersTab /> },
+                      { path: 'settings', element: <SettingsTab /> },
+                    ],
+                  },
+                  { path: 'expenses/new', element: soon('Add expense', 'M11') },
+                  { path: 'expenses/:expenseId', element: soon('Expense', 'M11') },
+                  { path: 'expenses/:expenseId/edit', element: soon('Edit expense', 'M11') },
+                ],
               },
-              { path: '/groups/:groupId/:tab', element: soon('Group', 'M10–M11') },
               { path: '/notifications', element: soon('Notifications', 'M12') },
               { path: '/reports', element: soon('Reports', 'M12') },
-              { path: '/profile', element: soon('Profile', 'M10') },
+              { path: '/profile', element: <ProfilePage /> },
               { path: '*', element: <NotFoundPage /> },
             ],
           },

@@ -105,6 +105,15 @@ describe('app shell (WIREFRAMES §1)', () => {
         'GET /api/auth/me': () => json(200, { user: USER }),
         'GET /api/notifications/unread-count': () => json(200, { count: 12 }),
         'POST /api/auth/logout': () => json(204),
+        'GET /api/groups/7': () =>
+          json(200, {
+            groupId: 7,
+            name: 'Trip Goa',
+            description: null,
+            me: { membershipId: 1, role: 'admin', netPaise: 0 },
+            members: [],
+            pastMembers: [],
+          }),
       }),
     );
   });

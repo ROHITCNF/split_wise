@@ -180,18 +180,26 @@ Notes:
 
 ## M6 — Expenses & balances API (E1–E6, B1–B2, D1)
 
-- [ ] E2 create — payer/participants active, shared split engine, `position` order, change record + activity + notifications
-- [ ] E1 list — search `q` (description/notes), `date`, `amountPaise`, pagination, `myShare`, frozen flag
-- [ ] E3 detail — shares, permissions (`canEdit`, `canDelete`, `frozenReason`), deleted expenses viewable
-- [ ] E4 edit — creator/admin, split method locked, add/remove participants (active only), payer change, departed-member freeze, `SETTLEMENT_EXISTS` confirmation, last write wins, before/after record
-- [ ] E5 soft delete — creator/admin, freeze check
-- [ ] E6 history
-- [ ] B1 balances — pairwise netted + my position
-- [ ] B2 breakdown for a pair
-- [ ] D1 dashboard — totals, groups with net, latest 10 activity
-- [ ] Tests: E1–E11, E23–E24, E27; balances verified against hand-calculated seed scenarios
+- [x] E2 create — payer/participants active, shared split engine, `position` order, change record + activity + notifications
+- [x] E1 list — search `q` (description/notes), `date`, `amountPaise`, pagination, `myShare`, frozen flag
+- [x] E3 detail — shares, permissions (`canEdit`, `canDelete`, `frozenReason`), deleted expenses viewable
+- [x] E4 edit — creator/admin, split method locked, add/remove participants (active only), payer change, departed-member freeze, `SETTLEMENT_EXISTS` confirmation, last write wins, before/after record
+- [x] E5 soft delete — creator/admin, freeze check
+- [x] E6 history
+- [x] B1 balances — pairwise netted + my position
+- [x] B2 breakdown for a pair
+- [x] D1 dashboard — totals, groups with net, latest 10 activity
+- [x] Tests: E1–E11, E23–E24, E27; balances verified against hand-calculated seed scenarios
 
-**Checkpoint M6:** add/edit/delete expenses and see balances change correctly.
+Notes:
+- Group-scoped routers (`/api/groups/:groupId/expenses`, `/balances`) are mounted behind `requireAuth + requireMember`, with `mergeParams`.
+- Expense notifications are per person: participants see "your share ₹X"; people dropped on edit get "you're no longer part of it".
+- Settlement warning (FR-EXP-09) checks old and new payer/participants; settlements strictly newer than the expense's `created_at`.
+- `permissions.frozenReason = INVOLVES_DEPARTED_MEMBER` computed from current membership status.
+- Dashboard activity only from groups where the caller is still active.
+- 169 server tests.
+
+**Checkpoint M6 ✅:** add/edit/delete expenses and see balances change correctly.
 
 ---
 

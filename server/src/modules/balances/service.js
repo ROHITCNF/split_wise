@@ -74,3 +74,94 @@ export function nonZeroBalancesForUser(ctx, userId) {
     }))
     .filter((row) => row.netPaise !== 0);
 }
+
+/**
+ * B1 — pairwise lines plus the caller's own position (FR-BAL-01..03).
+ * `toRef(membershipId)` turns IDs into MemberRefs.
+ */
+export function groupBalances(ctx, groupId, myMembershipId, toRef) {
+  const pairs = pairBalances(ctx, groupId);
+  const youOwe = pairs
+    .filter((p) => p.fromMembershipId === myMembershipId)
+    .map((p) => ({ to: toRef(p.toMembershipId), amountPaise: p.amountPaise }));
+  const owesYou = pairs
+    .filter((p) => p.toMembershipId === myMembershipId)
+    .map((p) => ({ from: toRef(p.fromMembershipId), amountPaise: p.amountPaise }));
+  const sum = (rows) => rows.reduce((total, r) => total + r.amountPaise, 0);
+  return {
+    pairs: pairs.map((p) => ({
+      from: toRef(p.fromMembershipId),
+      to: toRef(p.toMembershipId),
+      amountPaise: p.amountPaise,
+    })),
+    me: { netPaise: sum(owesYou) - sum(youOwe), youOwe, owesYou },
+  };
+}
+
+/**
+ * B2 — the expenses and settlements that make up the balance between two
+ * memberships (FR-BAL-05). `effectPaise` is the change to "from owes to".
+ */
+export function pairBreakdown(ctx, groupId, a, b) {
+  const expenseRows = ctx.sqlite
+    .prepare(
+      `SELECT e.id, e.expense_date AS date, e.description, e.payer_membership_id AS payer,
+              s.share_paise AS share
+       FROM expenses e JOIN expense_shares s ON s.expense_id = e.id
+       WHERE e.group_id = :groupId AND e.status = 'active'
+         AND ((e.payer_membership_id = :a AND s.membership_id = :b)
+           OR (e.payer_membership_id = :b AND s.membership_id = :a))`,
+    )
+    .all({ groupId, a, b });
+  const settlementRows = ctx.sqlite
+    .prepare(
+      `SELECT id, settlement_date AS date, note, from_membership_id AS payer, amount_paise AS amount
+       FROM settlements
+       WHERE group_id = :groupId AND status = 'active'
+         AND ((from_membership_id = :a AND to_membership_id = :b)
+           OR (from_membership_id = :b AND to_membership_id = :a))`,
+    )
+    .all({ groupId, a, b });
+
+  // Effects on "a owes b": b paid for a → +, a paid for b → −; a paid b back → −.
+  const items = [
+    ...expenseRows.map((r) => ({
+      kind: 'expense',
+      id: r.id,
+      date: r.date,
+      description: r.description,
+      paidBy: r.payer,
+      aOwesB: r.payer === b ? r.share : -r.share,
+    })),
+    ...settlementRows.map((r) => ({
+      kind: 'settlement',
+      id: r.id,
+      date: r.date,
+      note: r.note,
+      paidBy: r.payer,
+      aOwesB: r.payer === a ? -r.amount : r.amount,
+    })),
+  ].sort((x, y) => (x.date === y.date ? y.id - x.id : x.date < y.date ? 1 : -1));
+
+  const net = items.reduce((total, i) => total + i.aOwesB, 0);
+  const flip = net < 0;
+  return {
+    fromMembershipId: flip ? b : a,
+    toMembershipId: flip ? a : b,
+    netPaise: Math.abs(net),
+    items: items.map(({ aOwesB, ...item }) => ({ ...item, effectPaise: flip ? -aOwesB : aOwesB })),
+  };
+}
+
+/** Totals across all of a user's active groups (FR-BAL-04, FR-DSH-01). */
+export function overallTotals(ctx, activeMemberships) {
+  let youOwePaise = 0;
+  let owedToYouPaise = 0;
+  for (const { groupId, membershipId } of activeMemberships) {
+    for (const p of pairBalances(ctx, groupId)) {
+      if (p.fromMembershipId === membershipId) youOwePaise += p.amountPaise;
+      if (p.toMembershipId === membershipId) owedToYouPaise += p.amountPaise;
+    }
+  }
+  return { youOwePaise, owedToYouPaise, netPaise: owedToYouPaise - youOwePaise };
+}

@@ -11,6 +11,11 @@ import { createConsoleMailer } from './modules/auth/mailer.js';
 import { createMockGoogleProvider } from './modules/auth/mockGoogle.js';
 import { profileRoutes, userRoutes } from './modules/users/routes.js';
 import { groupRoutes } from './modules/groups/routes.js';
+import { expenseRoutes } from './modules/expenses/routes.js';
+import { balanceRoutes } from './modules/balances/routes.js';
+import { dashboardRoutes } from './modules/dashboard/routes.js';
+import { requireAuth } from './middleware/session.js';
+import { requireMember } from './middleware/membership.js';
 
 /**
  * Request pipeline shared by the real app and tests: security headers, logging,
@@ -60,6 +65,12 @@ export function createApp(database, { config = defaultConfig, ...services } = {}
   app.use('/api/auth', authRoutes(ctx));
   app.use('/api/me', profileRoutes(ctx));
   app.use('/api/users', userRoutes(ctx));
+  app.use('/api/dashboard', dashboardRoutes(ctx));
+
+  // Group-scoped resources: caller must be an active member (404 otherwise).
+  const member = [requireAuth, requireMember(ctx)];
+  app.use('/api/groups/:groupId/expenses', member, expenseRoutes(ctx));
+  app.use('/api/groups/:groupId/balances', member, balanceRoutes(ctx));
   app.use('/api/groups', groupRoutes(ctx));
   if (!config.isProduction) app.use('/api/dev', devRoutes(ctx));
   applyErrorHandling(app);

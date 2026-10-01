@@ -296,13 +296,22 @@ Notes:
 
 ## M11 — Client screens: expenses, balances, settlements
 
-- [ ] §8 Expense form (full page) — React Hook Form + Zod, three split modes with live remaining, drag order, edit mode with locked method, settlement-exists dialog, server error mapping
-- [ ] §9 Expense list (search, filters in URL, pagination, 🔒) + detail (shares, history diff, frozen/deleted states, delete confirm)
-- [ ] §10 Balances tab + breakdown dialog
-- [ ] §11 Settle-up dialog (prefill, overpayment dialog, edit/delete) + Settlements tab
-- [ ] Activity tab (§14 layout)
+- [x] §8 Expense form (full page) — React Hook Form + Zod, three split modes with live remaining, drag order, edit mode with locked method, settlement-exists dialog, server error mapping
+- [x] §9 Expense list (search, filters in URL, pagination, 🔒) + detail (shares, history diff, frozen/deleted states, delete confirm)
+- [x] §10 Balances tab + breakdown dialog
+- [x] §11 Settle-up dialog (prefill, overpayment dialog, edit/delete) + Settlements tab
+- [x] Activity tab (§14 layout)
 
-**Checkpoint M11:** add expense of each split method, settle up, see balances update.
+Notes:
+- Expense form: React Hook Form with `useFieldArray` rows (every active member; current participants first). Live preview uses the shared `computeShares` / `splitSummary`, so the screen shows exactly what the server will store. Participant order is changed with ↑ / ↓ buttons instead of drag-and-drop (keyboard-friendly, same effect on "first participant").
+- Edit: split method locked; frozen expenses show the reason and can't be saved; `SETTLEMENT_EXISTS` goes through the confirmation helper.
+- Expense list filters (q, date, amount, page) live in the URL; search and amount are debounced.
+- Detail page diff renders before/after per field and per share; deleted banner uses the "deleted" history entry for who/when (the expense object has no deletedBy).
+- Settle-up dialog serves the header (prefills the largest debt), Balances tab rows (Settle up / Record payment) and Settlements tab (edit/delete). Over-payment confirmation explains the reversed balance.
+- jsdom stubs (ResizeObserver, pointer capture, scrollIntoView) added to the client test setup for Radix.
+- 62 client tests.
+
+**Checkpoint M11 ✅:** add expense of each split method, settle up, see balances update.
 
 ---
 

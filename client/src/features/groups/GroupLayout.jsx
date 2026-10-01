@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { PlusIcon } from 'lucide-react';
 import { BalanceText } from '@/components/common.jsx';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { SettleUpDialog } from '../settlements/SettleUpDialog.jsx';
 import { useGroup } from './GroupContext.jsx';
 
 const TABS = [
@@ -16,7 +18,8 @@ const TABS = [
 
 /** WIREFRAMES §6 — header, actions and tabs around each group tab. */
 export function GroupLayout() {
-  const { group } = useGroup();
+  const { group, refetchGroup } = useGroup();
+  const [settleOpen, setSettleOpen] = useState(false);
   const { me } = group;
 
   return (
@@ -41,8 +44,8 @@ export function GroupLayout() {
           <BalanceText netPaise={me.netPaise} className="text-sm font-medium" />
           <div className="flex gap-2">
             {me.netPaise < 0 && (
-              <Button variant="outline" asChild>
-                <Link to={`/groups/${group.groupId}/balances`}>Settle up</Link>
+              <Button variant="outline" onClick={() => setSettleOpen(true)}>
+                Settle up
               </Button>
             )}
             <Button asChild>
@@ -72,6 +75,14 @@ export function GroupLayout() {
       </nav>
 
       <Outlet />
+
+      <SettleUpDialog
+        open={settleOpen}
+        onOpenChange={setSettleOpen}
+        group={group}
+        prefill="largest-i-owe"
+        onSaved={refetchGroup}
+      />
     </div>
   );
 }

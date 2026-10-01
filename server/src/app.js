@@ -6,8 +6,7 @@ import { originCheck } from './middleware/originCheck.js';
 import { loadSession } from './middleware/session.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { systemRoutes } from './modules/system/routes.js';
-import { authRoutes, devRoutes } from './modules/auth/routes.js';
-import { createConsoleMailer } from './modules/auth/mailer.js';
+import { authRoutes } from './modules/auth/routes.js';
 import { createMockGoogleProvider } from './modules/auth/mockGoogle.js';
 import { profileRoutes, userRoutes } from './modules/users/routes.js';
 import { groupRoutes } from './modules/groups/routes.js';
@@ -40,24 +39,21 @@ export function applyErrorHandling(app) {
 }
 
 /**
- * Mock Google sign-in and the console mailer are local-only (ADR-006). Production
- * must inject real implementations; there are none yet, so it refuses to start.
+ * Mock Google sign-in is local-only (ADR-006). Production must inject a real
+ * identity provider; there is none yet, so it refuses to start.
  */
-function externalServices(config, { mailer, identityProvider }) {
-  if (config.isProduction && (!mailer || !identityProvider)) {
-    throw new Error('Production needs a real mailer and identity provider; mocks are disabled.');
+function externalServices(config, { identityProvider }) {
+  if (config.isProduction && !identityProvider) {
+    throw new Error('Production needs a real identity provider; the mock is disabled.');
   }
-  return {
-    mailer: mailer ?? createConsoleMailer(),
-    identityProvider: identityProvider ?? createMockGoogleProvider(),
-  };
+  return { identityProvider: identityProvider ?? createMockGoogleProvider() };
 }
 
 /**
  * Builds the Express app without starting a listener, so tests can drive it with
  * Supertest against an in-memory database.
  * @param {{ sqlite: import('better-sqlite3').Database, db: object }} database
- * @param {{ config?: typeof defaultConfig, mailer?: object, identityProvider?: object }} [options]
+ * @param {{ config?: typeof defaultConfig, identityProvider?: object }} [options]
  */
 export function createApp(database, { config = defaultConfig, ...services } = {}) {
   const ctx = { ...database, config, ...externalServices(config, services) };
@@ -79,7 +75,6 @@ export function createApp(database, { config = defaultConfig, ...services } = {}
   app.use('/api/groups/:groupId/settlements', member, settlementRoutes(ctx));
   app.use('/api/groups/:groupId/activity', member, activityRoutes(ctx));
   app.use('/api/groups', groupRoutes(ctx));
-  if (!config.isProduction) app.use('/api/dev', devRoutes(ctx));
   applyErrorHandling(app);
 
   app.locals.ctx = ctx;

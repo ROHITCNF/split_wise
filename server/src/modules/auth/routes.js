@@ -1,24 +1,18 @@
 import { Router } from 'express';
 import { parse as parseCookies } from 'cookie';
-import {
-  AppError,
-  loginBody,
-  resendVerificationBody,
-  signupBody,
-  verifyEmailBody,
-} from '@splitbook/shared';
+import { loginBody, signupBody } from '@splitbook/shared';
 import { authRateLimit } from '../../middleware/rateLimit.js';
 import { requireAuth } from '../../middleware/session.js';
 import { validate } from '../../middleware/validate.js';
 import { randomToken } from '../../lib/crypto.js';
 import { endSession, startSession } from '../../lib/sessions.js';
 import { findUserById, toUserDto } from '../users/repository.js';
-import { googleSignIn, login, resendVerification, signup, verifyEmail } from './service.js';
+import { googleSignIn, login, signup } from './service.js';
 
 const STATE_COOKIE = 'g_state';
 const CALLBACK_PATH = '/api/auth/google/callback';
 
-/** A1–A8 (API_CONTRACT §3). */
+/** A1, A4–A8 (API_CONTRACT §3). */
 export function authRoutes(ctx) {
   const router = Router();
   const limited = authRateLimit({ limit: ctx.config.authRateLimitPerMinute });
@@ -28,27 +22,11 @@ export function authRoutes(ctx) {
     return { user: toUserDto(ctx, findUserById(ctx, userId)) };
   };
 
+  // A1 — account is verified immediately and the user is logged in (REQUIREMENTS v1.3).
   router.post('/signup', limited, validate({ body: signupBody }), async (req, res) => {
-    await signup(ctx, req.valid.body);
-    res.status(202).json({ message: 'Check your email to verify your account.' });
+    const userId = await signup(ctx, req.valid.body);
+    res.status(201).json(logIn(req, res, userId));
   });
-
-  router.post('/verify-email', limited, validate({ body: verifyEmailBody }), (req, res) => {
-    const userId = verifyEmail(ctx, req.valid.body.token);
-    res.json(logIn(req, res, userId)); // API-3: verification logs the user in
-  });
-
-  router.post(
-    '/resend-verification',
-    limited,
-    validate({ body: resendVerificationBody }),
-    (req, res) => {
-      resendVerification(ctx, req.valid.body.email);
-      res
-        .status(202)
-        .json({ message: 'If an unverified account exists, a new link has been sent.' });
-    },
-  );
 
   router.post('/login', limited, validate({ body: loginBody }), async (req, res) => {
     const userId = await login(ctx, req.valid.body);
@@ -94,15 +72,5 @@ export function authRoutes(ctx) {
     res.json({ user: toUserDto(ctx, req.user) });
   });
 
-  return router;
-}
-
-/** X1 — dev outbox of verification links; only mounted outside production. */
-export function devRoutes(ctx) {
-  const router = Router();
-  router.get('/outbox', (req, res) => {
-    if (!ctx.mailer.outbox) throw new AppError('NOT_FOUND');
-    res.json({ items: ctx.mailer.outbox });
-  });
   return router;
 }

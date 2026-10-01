@@ -162,6 +162,6 @@ describe('P3 delete account (FR-AUTH-08)', () => {
       .post('/api/auth/signup')
       .set('Origin', TEST_ORIGIN)
       .send({ name: 'Karan', email: 'karan@example.com', password: 'secret-pass' });
-    expect(res.status).toBe(202);
+    expect(res.status).toBe(201);
   });
 });

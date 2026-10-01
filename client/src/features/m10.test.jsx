@@ -18,17 +18,27 @@ afterEach(() => vi.unstubAllGlobals());
 const anonymous = { 'GET /api/auth/me': () => apiError(401, 'UNAUTHENTICATED') };
 
 describe('§2 auth screens', () => {
-  it('sign up → check your email', async () => {
+  const emptyDashboard = () =>
+    json(200, {
+      totals: { youOwePaise: 0, owedToYouPaise: 0, netPaise: 0 },
+      groups: [],
+      recentActivity: [],
+    });
+
+  it('sign up logs in and opens the dashboard (no email verification, v1.3)', async () => {
     const api = fakeServer({
       ...anonymous,
-      'POST /api/auth/signup': () => json(202, { message: 'ok' }),
+      'POST /api/auth/signup': () => json(201, { user: USER }),
+      'GET /api/notifications/unread-count': () => json(200, { count: 0 }),
+      'GET /api/dashboard': emptyDashboard,
     });
-    renderAt('/signup');
+    const router = renderAt('/signup');
     await userEvent.type(await screen.findByLabelText('Name'), 'Karan');
     await userEvent.type(screen.getByLabelText('Email'), 'karan@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'secret-pass');
     await userEvent.click(screen.getByRole('button', { name: 'Create account' }));
-    expect(await screen.findByRole('heading', { name: 'Check your email' })).toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(sentBodies(api, 'POST', '/api/auth/signup')).toEqual([
       { name: 'Karan', email: 'karan@example.com', password: 'secret-pass' },
     ]);
@@ -56,53 +66,11 @@ describe('§2 auth screens', () => {
     expect(await screen.findByRole('link', { name: 'Log in instead' })).toBeInTheDocument();
   });
 
-  it('verify link logs in and goes to the dashboard', async () => {
-    let verified = false;
-    const api = fakeServer({
-      'GET /api/auth/me': () =>
-        verified ? json(200, { user: USER }) : apiError(401, 'UNAUTHENTICATED'),
-      'POST /api/auth/verify-email': () => {
-        verified = true;
-        return json(200, { user: USER });
-      },
-      'GET /api/notifications/unread-count': () => json(200, { count: 0 }),
-      'GET /api/dashboard': () =>
-        json(200, {
-          totals: { youOwePaise: 0, owedToYouPaise: 0, netPaise: 0 },
-          groups: [],
-          recentActivity: [],
-        }),
-    });
+  it('/verify no longer exists', async () => {
+    fakeServer(anonymous);
     const router = renderAt('/verify?token=abc');
-    expect(await screen.findByText(/Email verified/)).toBeInTheDocument();
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'), { timeout: 3000 });
-    expect(sentBodies(api, 'POST', '/api/auth/verify-email')).toEqual([{ token: 'abc' }]);
-  });
-
-  it('bad verify link offers resend', async () => {
-    fakeServer({
-      ...anonymous,
-      'POST /api/auth/verify-email': () => apiError(400, 'TOKEN_INVALID_OR_EXPIRED'),
-    });
-    renderAt('/verify?token=old');
-    expect(await screen.findByText(/invalid or has expired/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Resend verification' })).toBeDisabled();
-  });
-
-  it('unverified login offers to resend the link', async () => {
-    const api = fakeServer({
-      ...anonymous,
-      'POST /api/auth/login': () => apiError(403, 'EMAIL_NOT_VERIFIED', 'Verify your email first.'),
-      'POST /api/auth/resend-verification': () => json(202, {}),
-    });
-    renderAt('/login');
-    await userEvent.type(await screen.findByLabelText('Email'), 'karan@example.com');
-    await userEvent.type(screen.getByLabelText('Password'), 'x');
-    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Resend verification' }));
-    expect(sentBodies(api, 'POST', '/api/auth/resend-verification')).toEqual([
-      { email: 'karan@example.com' },
-    ]);
+    // Not a route any more → falls into the protected catch-all → login.
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
   });
 });
 

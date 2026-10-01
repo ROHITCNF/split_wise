@@ -1,6 +1,6 @@
 # SplitBook — Domain Model (v1)
 
-Status: v1.0 · Based on REQUIREMENTS.md v1.1 (frozen) · 2026-10-01
+Status: v1.0 (W1 updated for REQUIREMENTS v1.3: no email verification) · Based on REQUIREMENTS.md v1.1 (frozen) · 2026-10-01
 
 Conceptual model only. No technology, storage, or API decisions here. Entity "information" lists describe business meaning, not columns.
 
@@ -311,11 +311,10 @@ For a User and a Period (Mon–Sun week or calendar month, IST, by expense/settl
 
 Notation: **Actor** → steps → outcome. *Guards* are checks that can block.
 
-### W1. Register with email + password
+### W1. Register with email + password (changed in REQUIREMENTS v1.3)
 1. Visitor enters name, email, password.
-2. System sends verification.
-3. Visitor verifies → User becomes verified, searchable.
-- *Guard:* email already linked to Google account → password linked only after verification (merge).
+2. Account is created verified and the visitor is logged in.
+- *Guard:* email already has an account (password or Google) → rejected.
 
 ### W2. Sign in with Google
 1. Visitor chooses Google.

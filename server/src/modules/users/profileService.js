@@ -1,12 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { AppError } from '@splitbook/shared';
-import {
-  emailVerificationTokens,
-  loginMethods,
-  memberships,
-  sessions,
-  users,
-} from '../../db/schema.js';
+import { loginMethods, memberships, sessions, users } from '../../db/schema.js';
 import { hashPassword, verifyPassword } from '../../lib/passwords.js';
 import { nowIso } from '../../lib/time.js';
 import { withTransaction } from '../../lib/transaction.js';
@@ -82,7 +76,6 @@ export function deleteAccount(ctx, user) {
 
     ctx.db.delete(sessions).where(eq(sessions.userId, user.id)).run();
     ctx.db.delete(loginMethods).where(eq(loginMethods.userId, user.id)).run();
-    ctx.db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, user.id)).run();
     ctx.db
       .update(users)
       .set({

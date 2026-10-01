@@ -1,6 +1,6 @@
 # SplitBook — Requirements (v1)
 
-Status: **FROZEN v1.2** · Last updated: 2026-10-01
+Status: **FROZEN v1.3** · Last updated: 2026-10-01
 
 Changes after freeze require explicit sign-off and a version bump.
 
@@ -26,6 +26,7 @@ Goal: a web application where groups of registered users record shared expenses,
 
 ### Out of scope (v1)
 - Forgot / reset password
+- Email verification (removed in v1.3 — accounts are treated as verified at signup)
 - Non-group (1-to-1) expenses
 - Multiple payers on one expense
 - Receipt uploads
@@ -48,7 +49,7 @@ Goal: a web application where groups of registered users record shared expenses,
 | Actor | Description |
 |---|---|
 | Visitor | Not logged in. Can register or log in. |
-| User | Registered, verified, logged-in user. |
+| User | Registered, logged-in user. |
 | Group member | User who belongs to a group. |
 | Group admin | User who created the group. Exactly one per group. |
 
@@ -58,10 +59,10 @@ Goal: a web application where groups of registered users record shared expenses,
 
 | ID | Requirement |
 |---|---|
-| FR-AUTH-01 | A visitor can register with name, email, and password (8–128 characters, no other rules). |
+| FR-AUTH-01 | A visitor can register with name, email, and password (8–128 characters, no other rules). The account is created and the user is logged in immediately — no email verification (v1.3). |
 | FR-AUTH-02 | A visitor can register / log in with Google. |
-| FR-AUTH-03 | Email must be verified before the user can be found and added to groups. Google sign-in counts as verified. |
-| FR-AUTH-04 | One account per email. If the same email is used for both password and Google sign-in, both methods log in to the same account. A password is linked to an existing account only after the email is verified. |
+| FR-AUTH-03 | ~~Email verification~~ — removed in v1.3. Every account is treated as verified from signup and can be found and added to groups right away. |
+| FR-AUTH-04 | One account per email. If the same email is used for both password and Google sign-in, both methods log in to the same account. Signing up with a password on an email that already has an account (including a Google-only one) is rejected (`EMAIL_ALREADY_REGISTERED`). |
 | FR-AUTH-05 | A user can log out of the current device. |
 | FR-AUTH-06 | From the profile menu, a user can edit their display name and change their password (password-method users only). |
 | FR-AUTH-07 | Email address cannot be changed in v1. |
@@ -74,7 +75,7 @@ Goal: a web application where groups of registered users record shared expenses,
 | FR-GRP-01 | A user can create a group with a name (required) and description (optional). The creator becomes the group admin. |
 | FR-GRP-02 | Creating a group requires at least 2 members (admin + at least 1 other). After creation, the group may drop to 1 member (e.g. others leave). |
 | FR-GRP-03 | Group names need not be unique. |
-| FR-GRP-04 | The admin adds members by searching registered, verified users by name. Unregistered or unverified users do not appear in search. |
+| FR-GRP-04 | The admin adds members by searching registered users by name. Unregistered users do not appear in search. |
 | FR-GRP-05 | A user is added directly (no accept step) and receives an in-app notification. |
 | FR-GRP-06 | A user already in the group cannot be added again. |
 | FR-GRP-07 | No limit on number of groups per user or members per group in v1. |
@@ -227,7 +228,7 @@ Goal: a web application where groups of registered users record shared expenses,
 | E20a | Admin leaves | Warning: transfer admin then leave (balance must be 0), or leave and delete whole group |
 | E20b | Payer not in group | Must be added to group first |
 | E21 | Same email via Google and password | Single merged account |
-| E22 | Unverified user | Not searchable, cannot be added |
+| E22 | ~~Unverified user~~ | Not applicable since v1.3 (no verification) |
 | E23 | Future-dated expense | Blocked |
 | E24 | Long description | Max 100 chars; truncated at 40 with "..." in lists |
 | E25 | Special characters in CSV | Escaped |
@@ -256,9 +257,11 @@ Goal: a web application where groups of registered users record shared expenses,
 | D-14 | Admin self-removal (v1.1) | Not allowed; admin-leave flow only (FR-GRP-20). |
 | D-15 | Single-member group (v1.1) | Fully usable, e.g. "Trip Goa" where everyone left but Karan (FR-GRP-21). |
 | D-16 | Notifications after group deletion (v1.1) | History kept, link disabled (FR-NTF-05). |
-| D-17 | Password linking to existing Google account (v1.1) | Only after email verification (FR-AUTH-04). |
+| D-17 | Password linking to existing Google account (v1.1) | Superseded by D-19: password signup on an existing email is rejected. |
+| D-19 | Email verification (v1.3) | Removed for the MVP. Signup creates a verified account and logs in. Accepted risk: anyone can register any email address; a later Google sign-in with that email merges into that account (see ADR-006 note). |
 
 ### Change log
+- **v1.3 (2026-10-01):** Email verification removed for the MVP (FR-AUTH-01/03/04, FR-GRP-04, E22, D-17 superseded, D-19 added). Product owner request.
 - **v1.2 (2026-10-01):** From API review: FR-EXP-08 allows adding participants and changing payer on edit; FR-AUTH-01 password rule 8–128 chars.
 - **v1.1 (2026-10-01):** Domain-modeling findings DF-1..DF-6 applied. FR-SPL-02 changed (exact split must equal total). Added FR-GRP-20/21, FR-EXP-16, FR-STL-09, FR-NTF-05, E27–E29, D-13..D-17. FR-AUTH-04 clarified.
 - **v1.0 (2026-10-01):** Initial freeze.

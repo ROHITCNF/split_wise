@@ -348,8 +348,13 @@ Notes:
 
 ---
 
+## Change requests
+
+- [x] **CR-1 (2026-10-01): remove email verification for the MVP.** Signup now creates a verified account and logs in (`201 { user }` + session). Removed: verify-email (A2), resend (A3), dev outbox (X1), console mailer, `email_verification_tokens` (migration `0002_drop_email_verification.sql`), `EMAIL_NOT_VERIFIED` / `TOKEN_INVALID_OR_EXPIRED`, Verify page and "check your email" screen. Signup on any existing email (incl. Google-only) → `409 EMAIL_ALREADY_REGISTERED`. Docs: REQUIREMENTS v1.3, API_CONTRACT, DATABASE_SCHEMA, DOMAIN_MODEL W1, ADR-006, ARCHITECTURE, WIREFRAMES. Accepted risk recorded as D-19.
+
 ## TODO — revisit later
 
+- [ ] **D-19 follow-up (security):** decide whether a Google sign-in that merges into an existing password account should drop that password and end its sessions (pre-account-hijacking mitigation while there's no email verification).
 - [ ] **D-18: group admin deleting their account.** Current behaviour (M4): `DELETE /api/me` returns `409 ADMIN_MUST_CHOOSE` with `details.groups` while the user is admin of any group; they must use the admin-leave flow first. Product owner to revisit; once decided, update REQUIREMENTS (FR-AUTH-08, v1.3) and API_CONTRACT (P3).
 
 ## Out of scope for this plan

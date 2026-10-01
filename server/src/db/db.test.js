@@ -54,7 +54,10 @@ function insertExpense({ groupId, m1 }, amount = 30000) {
 describe('connection & migrations', () => {
   it('sets foreign keys on and records the migration', () => {
     expect(sqlite.pragma('foreign_keys', { simple: true })).toBe(1);
-    expect(sqlite.prepare('SELECT id FROM schema_migrations').all()).toEqual([{ id: '0001_init' }]);
+    expect(sqlite.prepare('SELECT id FROM schema_migrations ORDER BY id').all()).toEqual([
+      { id: '0001_init' },
+      { id: '0002_drop_email_verification' },
+    ]);
   });
 
   it('is idempotent', () => {
@@ -74,7 +77,7 @@ describe('connection & migrations', () => {
       .prepare(`SELECT name, strict FROM pragma_table_list WHERE schema = 'main'`)
       .all();
     const app = tables.filter((t) => !t.name.startsWith('sqlite_'));
-    expect(app).toHaveLength(13); // 12 domain tables + schema_migrations
+    expect(app).toHaveLength(12); // 11 domain tables + schema_migrations
     expect(app.every((t) => t.strict === 1)).toBe(true);
   });
 });

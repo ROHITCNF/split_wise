@@ -1,6 +1,6 @@
 # SplitBook — High-Level Architecture (v1)
 
-Status: **Accepted** (rev 3) · 2026-10-01 · Inputs: REQUIREMENTS.md v1.1, DOMAIN_MODEL.md v1.0 · Decisions: ADR.md
+Status: **Accepted** (rev 4: email verification removed, v1.3) · 2026-10-01 · Inputs: REQUIREMENTS.md v1.1, DOMAIN_MODEL.md v1.0 · Decisions: ADR.md
 
 Scope: tech stack, system boundaries, components and their responsibilities. API contracts and database schema are the next phase.
 
@@ -12,7 +12,7 @@ Both documents are consistent with each other. Points that shape the architectur
 
 | # | Observation | Architectural impact |
 |---|---|---|
-| R-1 | Email verification (FR-AUTH-03) needs outgoing email, though notifications are in-app only. | Mailer interface; console mailer locally (ADR-006). |
+| R-1 | ~~Email verification needs outgoing email~~ | Removed in v1.3 — no mailer (ADR-006). |
 | R-2 | Every change produces history + activity + notifications (FR-EXP-11, FR-ACT-01, FR-NTF-01). | Single transaction per command (ADR-007). |
 | R-3 | Balances are derived; guards depend on them (leave, remove, delete account). | Compute on read, one shared balance calculator (ADR-004). |
 | R-4 | Live split preview (FR-SPL-06) must match server result. | Shared split engine in browser and server (ADR-010). |
@@ -70,7 +70,7 @@ Assumptions are deliberately generous.
 | Query builder / migrations | Drizzle ORM + drizzle-kit | SQL-like query builder, migrations, PostgreSQL exit path |
 | Password hashing | Argon2id | Current best practice |
 | Google sign-in | **Mock Google provider** behind identity-provider interface | Local only (ADR-006) |
-| Email | **Console mailer** behind mailer interface (verification links logged) | Local only (ADR-006) |
+| Email | None — email verification removed in v1.3 | ADR-006 |
 | Security middleware | helmet, express-rate-limit | Headers, brute-force protection |
 | Logging | pino (pretty output in dev) | Structured, fast |
 | CSV | csv-stringify (streamed) | Correct escaping (FR-RPT-07) |
@@ -248,7 +248,7 @@ Route → authorise membership → BalanceService runs aggregate queries over ac
 |---|---|---|
 | **Middleware** | Request intake; session load; authentication gate; Origin check (CSRF); rate limiting; request ID + logging; central error handler | ADR-005, NFR-08 |
 | **auth** | Signup, password login, Google sign-in via identity-provider interface (mock today), account merge, email verification tokens via mailer interface (console today), session create/delete, password change | FR-AUTH-01..07 |
-| **dev tools** (non-production only) | Mock Google sign-in returning one hardcoded dummy user; dev outbox of verification links; DB seed/reset | ADR-006, ADR-012 |
+| **dev tools** (non-production only) | Mock Google sign-in returning one hardcoded dummy user; DB seed/reset | ADR-006, ADR-012 |
 | **users** | Profile read/update, verified-user search by name, account deletion with zero-balance guard | FR-AUTH-06/08, FR-GRP-04 |
 | **groups & membership** | Create (≥2 members), edit details, add/remove/leave, admin-leave (transfer or delete), group delete, membership-based access checks | FR-GRP-01..21 |
 | **expenses** | Add/edit/soft-delete; permission (creator or admin); split method lock; departed-member freeze; settlement warning; list/search/paginate; detail | FR-EXP-*, FR-SPL-* |

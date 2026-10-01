@@ -12,10 +12,7 @@ const del = (path, query, opts) => apiFetch(path, { method: 'DELETE', query, ...
 const noRedirect = { handleUnauthorized: false };
 
 export const authApi = {
-  signup: (body, opts) => post('/auth/signup', body, { ...noRedirect, ...opts }), // A1
-  verifyEmail: (token, opts) => post('/auth/verify-email', { token }, { ...noRedirect, ...opts }), // A2
-  resendVerification: (email, opts) =>
-    post('/auth/resend-verification', { email }, { ...noRedirect, ...opts }), // A3
+  signup: (body, opts) => post('/auth/signup', body, { ...noRedirect, ...opts }), // A1 — logs in
   login: (body, opts) => post('/auth/login', body, { ...noRedirect, ...opts }), // A4
   googleStartUrl: () => apiUrl('/auth/google/start'), // A5 — navigate, don't fetch
   logout: (opts) => post('/auth/logout', {}, { ...noRedirect, ...opts }), // A7
@@ -94,8 +91,4 @@ export const notificationsApi = {
 export const reportsApi = {
   get: (query, opts) => get('/reports', query, opts), // R1
   csvUrl: (query) => apiUrl('/reports/csv', query), // R2 — navigate to download
-};
-
-export const devApi = {
-  outbox: (opts) => get('/dev/outbox', undefined, opts), // X1 (non-production)
 };

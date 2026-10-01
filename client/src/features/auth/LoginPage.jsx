@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { toast } from 'sonner';
 import { authApi } from '@/api/endpoints.js';
 import { errorMessage } from '@/api/messages.js';
 import { useAuth } from '@/auth/AuthProvider.jsx';
@@ -47,11 +46,6 @@ export function LoginPage() {
     }
   };
 
-  const resend = async () => {
-    await authApi.resendVerification(form.email.trim()).catch(() => {});
-    toast.success('If your account needs verifying, a new link is on its way.');
-  };
-
   return (
     <AuthLayout title="Log in">
       <form className="space-y-4" onSubmit={submit} noValidate>
@@ -63,11 +57,6 @@ export function LoginPage() {
                 : error.code
                   ? errorMessage(error)
                   : error.message}
-              {error.code === 'EMAIL_NOT_VERIFIED' && (
-                <Button type="button" variant="link" className="h-auto p-0" onClick={resend}>
-                  Resend verification
-                </Button>
-              )}
             </AlertDescription>
           </Alert>
         )}

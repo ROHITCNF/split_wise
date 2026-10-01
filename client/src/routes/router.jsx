@@ -8,7 +8,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { LoginPage } from '@/features/auth/LoginPage.jsx';
 import { SignupPage } from '@/features/auth/SignupPage.jsx';
-import { VerifyPage } from '@/features/auth/VerifyPage.jsx';
 import { DashboardPage } from '@/features/dashboard/DashboardPage.jsx';
 import { GroupLoader } from '@/features/groups/GroupContext.jsx';
 import { GroupLayout } from '@/features/groups/GroupLayout.jsx';
@@ -51,7 +50,6 @@ export const routes = [
           { path: '/signup', element: <SignupPage /> },
         ],
       },
-      { path: '/verify', element: <VerifyPage /> },
       {
         element: <RequireAuth />,
         children: [

@@ -1,6 +1,6 @@
 # SplitBook — API Contract (v1)
 
-Status: **Accepted** · 2026-10-01 · Inputs: REQUIREMENTS.md v1.1, DOMAIN_MODEL.md v1.0, ADR.md, DATABASE_SCHEMA.md (all accepted)
+Status: **Accepted** (rev v1.3: email verification removed) · 2026-10-01 · Inputs: REQUIREMENTS.md v1.1, DOMAIN_MODEL.md v1.0, ADR.md, DATABASE_SCHEMA.md (all accepted)
 
 REST-style JSON over HTTP between the React client and the Express server (ADR-012). The client calls these only through its own `fetch` layer (ADR-014).
 
@@ -89,8 +89,8 @@ Some actions are allowed but need explicit confirmation (FR-EXP-09, FR-STL-03, F
 |---|---|---|---|
 | **Auth** ||||
 | A1 | `POST /api/auth/signup` | Register with email + password | Public |
-| A2 | `POST /api/auth/verify-email` | Use verification token | Public |
-| A3 | `POST /api/auth/resend-verification` | Resend link | Public |
+| ~~A2~~ | ~~`POST /api/auth/verify-email`~~ | Removed in v1.3 | — |
+| ~~A3~~ | ~~`POST /api/auth/resend-verification`~~ | Removed in v1.3 | — |
 | A4 | `POST /api/auth/login` | Password login | Public |
 | A5 | `GET /api/auth/google/start` | Begin Google sign-in (mock) | Public |
 | A6 | `GET /api/auth/google/callback` | Finish Google sign-in (mock) | Public |
@@ -101,7 +101,7 @@ Some actions are allowed but need explicit confirmation (FR-EXP-09, FR-STL-03, F
 | P2 | `POST /api/me/password` | Change password | User (password method) |
 | P3 | `DELETE /api/me` | Delete account | User |
 | **Users** ||||
-| U1 | `GET /api/users/search` | Find verified users by name | User |
+| U1 | `GET /api/users/search` | Find users by name | User |
 | **Dashboard** ||||
 | D1 | `GET /api/dashboard` | Totals, groups, recent activity | User |
 | **Groups** ||||
@@ -143,7 +143,7 @@ Some actions are allowed but need explicit confirmation (FR-EXP-09, FR-STL-03, F
 | R2 | `GET /api/reports/csv` | Same report as CSV | User |
 | **System / dev** ||||
 | H1 | `GET /api/health` | Liveness + DB check | Public |
-| X1 | `GET /api/dev/outbox` | Verification links (console mailer) | Public, **non-production only** |
+| ~~X1~~ | ~~`GET /api/dev/outbox`~~ | Removed in v1.3 | — |
 
 "Member" = caller has an **active** membership in the group. Past members (left/removed) lose all access to the group (FR-GRP-15). Non-members get `404`.
 
@@ -157,41 +157,20 @@ Some actions are allowed but need explicit confirmation (FR-EXP-09, FR-STL-03, F
 ```
 Rules: name 1–60; email valid, lower-cased; password 8–128 chars.
 
-| Situation | Result |
-|---|---|
-| New email | User created (unverified) + password method; `verify_email` token mailed → `202` |
-| Email exists, unverified, password method | Password replaced, new token mailed → `202` |
-| Email exists via Google only (no password) | Nothing changed yet; `link_password` token with pending password mailed (DF-3) → `202` |
-| Email exists with password method, verified | `409 EMAIL_ALREADY_REGISTERED` |
+**Changed in REQUIREMENTS v1.3 — no email verification.** The account is created verified and the user is logged in (session cookie set).
 
-`202`:
-```json
-{ "message": "Check your email to verify your account." }
-```
-No session is created.
+`201` → `{ "user": User }` + `Set-Cookie: sid=…`
+`409 EMAIL_ALREADY_REGISTERED` — any active account already uses the email (password or Google-only).
 
-### A2. `POST /api/auth/verify-email`
-```json
-{ "token": "raw-token-from-link" }
-```
-- `verify_email` → sets `emailVerifiedAt`.
-- `link_password` → adds password login method to the existing account.
-- Token single-use, 24 h (S-5). Then logs the user in (creates session, sets `sid`).
-
-`200` → `{ "user": User }` · `400 TOKEN_INVALID_OR_EXPIRED`
-
-### A3. `POST /api/auth/resend-verification`
-```json
-{ "email": "karan@example.com" }
-```
-Always `202` (doesn't reveal whether the email exists). Sends a new token only if an unverified account exists.
+### A2 / A3 — removed in v1.3
+Email verification and "resend verification" no longer exist.
 
 ### A4. `POST /api/auth/login`
 ```json
 { "email": "karan@example.com", "password": "s3cret-pass" }
 ```
 `200` → `{ "user": User }` + `Set-Cookie: sid=…` (30-day sliding, S-4)
-Errors: `401 INVALID_CREDENTIALS` (wrong email or password — same message for both) · `403 EMAIL_NOT_VERIFIED` · `429 RATE_LIMITED`
+Errors: `401 INVALID_CREDENTIALS` (wrong email or password — same message for both) · `429 RATE_LIMITED`
 
 ### A5. `GET /api/auth/google/start`
 Browser navigation (not `fetch`). Server creates `state`, redirects (`302`) to the identity provider. **Mock provider (ADR-006):** redirects straight to A6 with a mock code.
@@ -199,7 +178,7 @@ Browser navigation (not `fetch`). Server creates `state`, redirects (`302`) to t
 ### A6. `GET /api/auth/google/callback?code=…&state=…`
 Server validates `state`, gets verified identity from provider (mock: `mock.user@gmail.com`, "Mock Google User"), then:
 - Google subject known → log in that user.
-- Email matches existing user → link Google method, mark email verified, log in (FR-AUTH-04).
+- Email matches existing user → link Google method, log in (FR-AUTH-04).
 - Otherwise → create verified user + Google method, log in.
 
 Sets `sid`, `302` → client `/`. On failure `302` → client `/login?error=google_failed`.
@@ -244,7 +223,7 @@ On success: account tombstoned, active memberships → `left`, all sessions remo
 
 ### U1. `GET /api/users/search?q=pri&groupId=3`
 - `q`: 2–60 chars, case-insensitive name match.
-- Only **verified, active** users (FR-GRP-04, E22). Excludes the caller.
+- Only **active** users (FR-GRP-04). Excludes the caller.
 - If `groupId` given (caller must be member): excludes users already active in that group.
 - Max 10 results.
 
@@ -281,7 +260,7 @@ Email is shown to tell apart users with the same name.
 ```json
 { "name": "Trip Goa", "description": "Dec 2026", "memberUserIds": [9, 11] }
 ```
-Rules: name 1–60, description ≤ 200 (S-2); `memberUserIds` ≥ 1 distinct verified active users, not the caller (FR-GRP-02).
+Rules: name 1–60, description ≤ 200 (S-2); `memberUserIds` ≥ 1 distinct active users, not the caller (FR-GRP-02).
 Caller becomes `admin`. Each added user notified (`added_to_group`).
 
 `201` → `Group` (as G3) · `400 GROUP_MIN_MEMBERS` · `400 USER_NOT_ELIGIBLE` (`details.userIds`)
@@ -586,9 +565,8 @@ Amounts in rupees with 2 decimals. Fields escaped per RFC 4180 (FR-RPT-07). Fiel
 ### H1. `GET /api/health`
 `200` → `{ "status": "ok", "db": "ok" }` · `503` if DB unreadable.
 
-### X1. `GET /api/dev/outbox`
-Non-production only (route not mounted otherwise).
-`200` → `{ "items": [ { "to": "karan@example.com", "purpose": "verify_email", "link": "http://localhost:5173/verify?token=…", "createdAt": "…" } ] }`
+### X1 — removed in v1.3
+No mailer, so no dev outbox.
 
 ---
 
@@ -602,14 +580,12 @@ Non-production only (route not mounted otherwise).
 | `PERCENT_SUM_MISMATCH` | 400 | Percentages ≠ 100 | `differenceBp` |
 | `SPLIT_METHOD_LOCKED` | 400 | Split method changed on edit | — |
 | `GROUP_MIN_MEMBERS` | 400 | Group needs ≥ 2 members at creation | — |
-| `USER_NOT_ELIGIBLE` | 400 | User unverified, deleted, or self | `userIds` |
+| `USER_NOT_ELIGIBLE` | 400 | User deleted, unknown, or self | `userIds` |
 | `INVALID_NEW_ADMIN` | 400 | Transfer target invalid | — |
 | `SAME_PARTY` | 400 | Settlement from = to | — |
 | `WRONG_PASSWORD` | 400 | Current password wrong on change | — |
-| `TOKEN_INVALID_OR_EXPIRED` | 400 | Verification token bad/used/expired | — |
 | `UNAUTHENTICATED` | 401 | No/expired session | — |
 | `INVALID_CREDENTIALS` | 401 | Login failed | — |
-| `EMAIL_NOT_VERIFIED` | 403 | Login before verification | — |
 | `FORBIDDEN` | 403 | Role not allowed / bad Origin | — |
 | `NOT_SETTLEMENT_PARTY` | 403 | Caller isn't from/to | — |
 | `NOT_FOUND` | 404 | Missing or not visible to caller | — |
@@ -674,7 +650,7 @@ Confirmed by product owner 2026-10-01.
 |---|---|---|
 | API-1 | Password rule | 8–128 characters, no other rules (A1, P2) |
 | API-2 | Add participants on expense edit? | Yes — active members only; removed ones may be dropped (E4) |
-| API-3 | Auto-login after email verification | Yes (A2) |
+| API-3 | Auto-login after email verification | Superseded in v1.3: signup itself logs in (A1) |
 | API-4 | Email shown in user search | Yes (U1) |
 | API-5 | Payer changeable on edit | Yes, to any active member (E4) |
 | API-6 | Default page size | 20, max 100 (§1) |

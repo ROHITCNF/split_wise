@@ -1,6 +1,8 @@
 # SplitBook — Database Schema (v1)
 
-Status: **Accepted** · 2026-10-01 · Inputs: REQUIREMENTS.md v1.1, DOMAIN_MODEL.md v1.0, ADR.md (accepted)
+Status: **Accepted** (rev v1.3) · 2026-10-01
+
+> **v1.3 change:** email verification was removed. Migration `0002_drop_email_verification.sql` drops `email_verification_tokens` (§4.3). `users.email_verified_at` stays and is set at signup / Google sign-in. Everything below about verification tokens is historical. · Inputs: REQUIREMENTS.md v1.1, DOMAIN_MODEL.md v1.0, ADR.md (accepted)
 
 Engine: SQLite (WAL) via better-sqlite3 + Drizzle (ADR-002). This document is the source of truth for the schema; Drizzle migrations must match it.
 
@@ -108,7 +110,7 @@ Account deletion (FR-AUTH-08): `status = 'deleted'`, `email` replaced by `delete
 
 Unique: one method of each type per user; one user per Google subject.
 
-### 4.3 `email_verification_tokens`
+### 4.3 `email_verification_tokens` — dropped in v1.3 (migration 0002)
 
 | Column | Type | Null | Rule |
 |---|---|---|---|

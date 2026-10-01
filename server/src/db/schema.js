@@ -27,17 +27,6 @@ export const loginMethods = sqliteTable('login_methods', {
   createdAt: text('created_at').notNull(),
 });
 
-export const emailVerificationTokens = sqliteTable('email_verification_tokens', {
-  id: integer('id').primaryKey(),
-  userId: integer('user_id').notNull(),
-  tokenHash: text('token_hash').notNull(),
-  purpose: text('purpose').notNull(),
-  pendingPasswordHash: text('pending_password_hash'),
-  expiresAt: text('expires_at').notNull(),
-  usedAt: text('used_at'),
-  createdAt: text('created_at').notNull(),
-});
-
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
   userId: integer('user_id').notNull(),

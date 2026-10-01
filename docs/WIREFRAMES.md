@@ -1,6 +1,6 @@
 # SplitBook — UI Wireframes (v1)
 
-Status: **Accepted** · 2026-10-01 · Inputs: REQUIREMENTS.md v1.2, ARCHITECTURE.md §6.1, API_CONTRACT.md (accepted)
+Status: **Accepted** (rev v1.3: no email verification screens) · 2026-10-01 · Inputs: REQUIREMENTS.md v1.2, ARCHITECTURE.md §6.1, API_CONTRACT.md (accepted)
 
 Low-fidelity, desktop-only (≥ 1024 px, NFR-02). Boxes show layout and content, not visual style. Built from shadcn/ui primitives (ADR-015). Each screen lists the API endpoints it calls (API_CONTRACT §2) and the requirements it covers.
 
@@ -33,7 +33,7 @@ Low-fidelity, desktop-only (≥ 1024 px, NFR-02). Boxes show layout and content,
 ### 0.3 Route map
 | Route | Screen |
 |---|---|
-| `/login`, `/signup`, `/verify` | Auth (§2) |
+| `/login`, `/signup` | Auth (§2) — `/verify` removed in v1.3 |
 | `/` | Dashboard (§4) |
 | `/groups`, `/groups/new` | Group list & create (§5) |
 | `/groups/:id/{expenses,balances,settlements,activity,members,settings}` | Group detail tabs (§6–§11) |
@@ -108,7 +108,6 @@ FR-AUTH-01..04 · API: A1–A6, X1 (dev)
 | State | UI |
 |---|---|
 | `401 INVALID_CREDENTIALS` | Alert in card: "Email or password is incorrect." |
-| `403 EMAIL_NOT_VERIFIED` | Alert: "Verify your email first." + link [ Resend verification ] (A3) |
 | `429 RATE_LIMITED` | Alert: "Too many attempts. Try again in N seconds." Button disabled |
 | `?error=google_failed` | Alert: "Google sign-in failed. Try again." |
 | Google button | Full-page navigation to A5 (mock signs in `mock.user@gmail.com`) |
@@ -136,31 +135,8 @@ FR-AUTH-01..04 · API: A1–A6, X1 (dev)
 ```
 Live validation from shared Zod schema. `409 EMAIL_ALREADY_REGISTERED` → field error under Email + "Log in instead" link.
 
-### 2.3 Check your email (after A1 `202`)
-```
-                              ┌──────────────────────────────────┐
-                              │  ✉  Check your email             │
-                              │                                  │
-                              │  We sent a verification link to  │
-                              │  karan@example.com.              │
-                              │  The link is valid for 24 hours. │
-                              │                                  │
-                              │  [ Resend link ]   Back to login │
-                              │                                  │
-                              │  ┌ DEV ONLY ──────────────────┐  │
-                              │  │ Open dev outbox →          │  │
-                              │  └────────────────────────────┘  │
-                              └──────────────────────────────────┘
-```
-"Resend link" → A3, then disabled 60 s. Dev box shown only in non-production; links to a simple list from X1.
-
-### 2.4 Verify email landing — `/verify?token=…`
-```
-   Verifying…  (spinner)          →   ✅ Email verified. Taking you to your dashboard…
-                                   →   ❌ This link is invalid or has expired.
-                                        [ Resend verification ]   Back to login
-```
-Calls A2 on mount. Success logs in (API-3) → `/`.
+### 2.3 / 2.4 — removed in v1.3
+"Check your email" and the verify landing page no longer exist: **Create account** logs the user in and opens the Dashboard with a welcome toast (REQUIREMENTS v1.3, FR-AUTH-01).
 
 ---
 

@@ -39,7 +39,7 @@ export function MemberSearch({ groupId, hideUserIds = [], onPick, pickLabel = 'A
       )}
       {enabled && !loading && !error && results.length === 0 && (
         <p className="text-xs text-muted-foreground">
-          No registered user found. They need to sign up and verify their email first.
+          No registered user found. They need to sign up first.
         </p>
       )}
       {enabled && results.length > 0 && (

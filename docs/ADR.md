@@ -11,7 +11,7 @@ Format per record: Context → Decision → Consequences. Status values: Propose
 | ADR-003 | Money stored as integer paise | Accepted |
 | ADR-004 | Balances computed on read, never stored | Accepted |
 | ADR-005 | Server-side sessions in httpOnly cookies | Accepted |
-| ADR-006 | Google sign-in mocked behind identity-provider interface; verification email mocked | Accepted |
+| ADR-006 | Google sign-in mocked behind identity-provider interface; no email verification (v1.3) | Accepted |
 | ADR-007 | One transaction per command, including history, activity and notifications | Accepted |
 | ADR-008 | In-app notifications delivered by polling (own poller) | Accepted |
 | ADR-009 | Layered backend: routes → services → repositories | Accepted |
@@ -100,21 +100,20 @@ Format per record: Context → Decision → Consequences. Status values: Propose
 
 ---
 
-## ADR-006 — Google sign-in mocked behind an identity-provider interface; verification email mocked
+## ADR-006 — Google sign-in mocked behind an identity-provider interface (no email verification)
 
-**Context.** FR-AUTH-02/04: Google sign-in; same email merges with password account; password linking only after verification (DF-3). Project runs locally only; no real Google client or email provider for now.
+**Context.** FR-AUTH-02/04: Google sign-in; same email merges with a password account. Project runs locally only; no real Google client. **REQUIREMENTS v1.3 removed email verification** for the MVP.
 
 **Decision.**
-- Backend defines an **identity provider interface**: "start sign-in" and "complete sign-in → verified email + name". v1 ships a **Mock Google provider**.
-- Mock flow: "Continue with Google" signs in **one hardcoded dummy Google user** (e.g. name "Mock Google User", email `mock.user@gmail.com`). No chooser screen.
-- Everything after the provider is real: account match by verified email, merge (link Google login method), new verified user creation, session creation (ADR-005).
-- Email verification uses a **mailer interface** with a **console mailer**: the verification link is printed to the API log (and kept in a dev-only "outbox" list). Clicking it verifies the account.
-- Mock provider and console mailer are enabled only when `NODE_ENV !== production`.
+- Backend defines an **identity provider interface**: "authorize URL" and "complete sign-in → email + name + subject". v1 ships a **Mock Google provider** that signs in one hardcoded dummy user (`mock.user@gmail.com`).
+- Everything after the provider is real: match by Google subject, else by email (link Google method), else create a user; then a normal session (ADR-005).
+- Password signup creates a verified account and logs in. Signup on an email that already has any account is rejected, so a password is never attached to someone else's Google account.
+- No mailer and no dev outbox (removed in v1.3). The mock provider is refused when `NODE_ENV=production`.
 
 **Consequences.**
-- ✅ No external accounts, secrets or network needed; full auth logic still exercised and testable.
-- ✅ Swapping in real Google OIDC (openid-client, PKCE) and a real SMTP mailer later = new provider classes, no change to services.
-- ❌ Mock sign-in is not authentication; must never be enabled outside local development.
+- ✅ Simplest possible signup; no external services.
+- ✅ Swapping in real Google OIDC later = new provider class, no service changes.
+- ⚠️ **Accepted MVP risk (D-19):** without verification anyone can register any email. If someone registers a victim's email with a password before the victim ever signs in with Google, a later Google sign-in by the victim merges into that account and the registrant's password still works ("pre-account hijacking"). Mitigations when needed: re-introduce verification, or on Google merge remove an existing password method and end its sessions.
 
 ---
 

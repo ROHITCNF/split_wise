@@ -79,15 +79,21 @@ Notes:
 
 ## M2 — Database (`server/src/db/`)
 
-- [ ] Drizzle schema matching DATABASE_SCHEMA §5 (12 tables, STRICT, CHECKs, partial unique indexes)
-- [ ] Migration generated + hand-checked against §5 DDL (STRICT / partial indexes added via custom SQL if Drizzle can't emit them)
-- [ ] Connection module: WAL, foreign_keys, busy_timeout, synchronous=NORMAL
-- [ ] Migrations run on server start
-- [ ] `db:reset` seed (DATABASE_SCHEMA §9): Karan, Priya, Ravi, Ananya (`password123`), groups "Trip Goa" and "Flat 302", expenses of each split method, one settlement
-- [ ] `db:backup` script: online backup to `data/backups/<timestamp>.db`, keep latest 30 (ADR-013)
-- [ ] Tests: constraint checks (one active admin, one active membership, amount > 0, from ≠ to), group delete cascade, notification `group_id` → NULL
+- [x] Drizzle schema matching DATABASE_SCHEMA §5 (12 tables, STRICT, CHECKs, partial unique indexes)
+- [x] Migration generated + hand-checked against §5 DDL (STRICT / partial indexes added via custom SQL if Drizzle can't emit them)
+- [x] Connection module: WAL, foreign_keys, busy_timeout, synchronous=NORMAL
+- [x] Migrations run on server start
+- [x] `db:reset` seed (DATABASE_SCHEMA §9): Karan, Priya, Ravi, Ananya (`password123`), groups "Trip Goa" and "Flat 302", expenses of each split method, one settlement
+- [x] `db:backup` script: online backup to `data/backups/<timestamp>.db`, keep latest 30 (ADR-013)
+- [x] Tests: constraint checks (one active admin, one active membership, amount > 0, from ≠ to), group delete cascade, notification `group_id` → NULL
 
-**Checkpoint M2:** reset + seed runs; open DB and inspect seeded data.
+Notes:
+- Physical schema = hand-written SQL migrations (`server/src/db/migrations/0001_init.sql`, copied from DATABASE_SCHEMA §5) applied by a small runner (`schema_migrations` table). Drizzle Kit can't emit STRICT tables; Drizzle is used for query building only, and a test fails if `schema.js` columns drift from the DB.
+- DB file lives at `server/data/app.db` (DB_PATH is relative to the server workspace); backups in `server/data/backups`.
+- Seed writes rows directly (users, groups, memberships, expenses + shares via the shared split engine, settlements, change records, activity). No notifications yet; seed can switch to services after M7.
+- 32 server tests: STRICT on all 13 tables, constraints, cascade, notification survival, seed invariants, backup rotation.
+
+**Checkpoint M2 ✅:** reset + seed runs; open DB and inspect seeded data.
 
 ---
 

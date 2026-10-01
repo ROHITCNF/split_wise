@@ -34,7 +34,8 @@ export default [
   },
   {
     rules: {
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      // React: shadcn/ui files keep `import * as React` although JSX doesn't need it.
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^(_|React$)' }],
       eqeqeq: ['error', 'always'],
     },
   },

@@ -245,18 +245,30 @@ Notes:
 
 ## M9 — Client foundation
 
-- [ ] Tailwind + shadcn/ui init; add primitives from WIREFRAMES §0.4; light theme only
-- [ ] Network layer (ADR-014): `apiFetch` (JSON, credentials, timeout/abort, `ApiError`, 401 handler), per-module API functions for all endpoints
-- [ ] `useRequest` hook (loading / data / error / refetch, cancel on unmount)
-- [ ] Visibility-aware poller (60 s) for unread count
-- [ ] Error-code → user message map (API §12)
-- [ ] Format helpers from `shared` (₹, dates IST 24 h, truncation at 40)
-- [ ] Router with all routes from WIREFRAMES §0.3; auth guard via A8 with `next` redirect
-- [ ] App shell (§1): top bar, nav, bell with count, profile menu, logout
-- [ ] Toast, confirmation-dialog helper for `CONFIRMATION_REQUIRED` flow
-- [ ] Vitest + React Testing Library set up for client
+- [x] Tailwind + shadcn/ui init; add primitives from WIREFRAMES §0.4; light theme only
+- [x] Network layer (ADR-014): `apiFetch` (JSON, credentials, timeout/abort, `ApiError`, 401 handler), per-module API functions for all endpoints
+- [x] `useRequest` hook (loading / data / error / refetch, cancel on unmount)
+- [x] Visibility-aware poller (60 s) for unread count
+- [x] Error-code → user message map (API §12)
+- [x] Format helpers from `shared` (₹, dates IST 24 h, truncation at 40)
+- [x] Router with all routes from WIREFRAMES §0.3; auth guard via A8 with `next` redirect
+- [x] App shell (§1): top bar, nav, bell with count, profile menu, logout
+- [x] Toast, confirmation-dialog helper for `CONFIRMATION_REQUIRED` flow
+- [x] Vitest + React Testing Library set up for client
 
-**Checkpoint M9:** logged-in shell with live bell count against seeded server.
+Notes:
+- shadcn/ui added with the CLI using a hand-written `components.json` (`tsx: false`); the CLI imported `cn` from a bogus npm package and pulled `next-themes`, so `src/lib/utils.js` was added, imports fixed, and the Toaster pinned to the light theme. Theme tokens (shadcn "neutral" + `owe` / `owed` money colours) live in `src/index.css`; body min-width 1024 px.
+- Network layer: `api/client.js` (`apiFetch`, `ApiError`, timeout, NETWORK_ERROR / TIMEOUT, 401 handler), `api/endpoints.js` (one function per endpoint, A1–X1), `api/confirm.js` (`withConfirmation` for API §1.3), `api/messages.js`.
+- Hooks: `useRequest` (abort on change/unmount, stale answers ignored), `usePoller` (pauses when tab hidden). Both use the "latest ref" pattern required by eslint-plugin-react-hooks v7.
+- Auth: `AuthProvider` (A8 on start, any 401 → anonymous), `RequireAuth` → `/login?next=…`, `GuestOnly`; `safeNext` blocks open redirects.
+- App shell with nav, bell (60 s poll + on navigation, "9+"), profile menu with logout; `ConfirmProvider` (`useConfirm`).
+- Login page (§2.1) built early so the shell can be used; other screens are placeholders until M10–M12.
+- Shared `truncate` added (code-point safe).
+- ESLint: `React` allowed as unused (shadcn files keep `import * as React`).
+- Build warns about a > 500 kB chunk (zod + shared + Radix); acceptable locally.
+- 31 client tests.
+
+**Checkpoint M9 ✅:** logged-in shell with live bell count against seeded server.
 
 ---
 

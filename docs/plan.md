@@ -125,21 +125,30 @@ Notes:
 
 ## M4 — Auth & profile API (A1–A8, P1–P3, X1)
 
-- [ ] Argon2id password hashing
-- [ ] Mailer interface + console mailer + in-memory dev outbox (X1, non-production only)
-- [ ] Identity-provider interface + mock Google provider (one hardcoded user `mock.user@gmail.com`) (ADR-006)
-- [ ] A1 signup — all 4 cases incl. `link_password` for Google-only email (DF-3)
-- [ ] A2 verify-email — `verify_email` and `link_password`; single-use, 24 h; auto-login (API-3)
-- [ ] A3 resend verification (always 202)
-- [ ] A4 login — `INVALID_CREDENTIALS`, `EMAIL_NOT_VERIFIED`, rate limit
-- [ ] A5/A6 Google start/callback — known subject, email merge, new user; `state` check
-- [ ] A7 logout (current session only), A8 me
-- [ ] P1 edit name, P2 change password (`NO_PASSWORD_METHOD`, `WRONG_PASSWORD`)
-- [ ] P3 delete account — zero-balance guard across groups, tombstone (S-6), memberships → left, sessions cleared
-- [ ] Mock provider and dev outbox refuse to load when `NODE_ENV=production`
-- [ ] Supertest coverage for every success path and error code above
+- [x] Argon2id password hashing
+- [x] Mailer interface + console mailer + in-memory dev outbox (X1, non-production only)
+- [x] Identity-provider interface + mock Google provider (one hardcoded user `mock.user@gmail.com`) (ADR-006)
+- [x] A1 signup — all 4 cases incl. `link_password` for Google-only email (DF-3)
+- [x] A2 verify-email — `verify_email` and `link_password`; single-use, 24 h; auto-login (API-3)
+- [x] A3 resend verification (always 202)
+- [x] A4 login — `INVALID_CREDENTIALS`, `EMAIL_NOT_VERIFIED`, rate limit
+- [x] A5/A6 Google start/callback — known subject, email merge, new user; `state` check
+- [x] A7 logout (current session only), A8 me
+- [x] P1 edit name, P2 change password (`NO_PASSWORD_METHOD`, `WRONG_PASSWORD`)
+- [x] P3 delete account — zero-balance guard across groups, tombstone (S-6), memberships → left, sessions cleared
+- [x] Mock provider and dev outbox refuse to load when `NODE_ENV=production`
+- [x] Supertest coverage for every success path and error code above
 
-**Checkpoint M4:** sign up → verify via outbox → log in → mock Google merge, via HTTP client or tests.
+Notes:
+- Balance calculator (`modules/balances/service.js`: `pairBalances`, `memberNet`, `nonZeroBalancesForUser`) built here instead of M5 because account deletion needs the zero-balance guard. Tested against hand-calculated seed numbers.
+- Google `state` kept in a 10-minute httpOnly cookie scoped to `/api/auth/google`.
+- Mail is sent only after the transaction commits.
+- Login reveals "not verified" only after a correct password; unknown email and wrong password share one response and similar timing (dummy Argon2 verify).
+- Drizzle schema now mirrors `status` defaults (otherwise it inserts NULL).
+- ⚠️ **Pending decision D-18:** account deletion is also blocked (`409 ADMIN_MUST_CHOOSE`, `details.groups`) while the user is admin of any group — otherwise the group would have no admin. Not yet in REQUIREMENTS / API_CONTRACT.
+- 100 server tests.
+
+**Checkpoint M4 ✅:** sign up → verify via outbox → log in → mock Google merge, via HTTP client or tests.
 
 ---
 
@@ -154,7 +163,7 @@ Notes:
 - [ ] M1 add member — admin only, `ALREADY_MEMBER`, `USER_NOT_ELIGIBLE`, re-add = new membership
 - [ ] M2 remove member — admin only, `CANNOT_REMOVE_SELF`, `BALANCE_NOT_ZERO`
 - [ ] M3 leave — member zero-balance guard; admin flow `transfer` / `delete` / `ADMIN_MUST_CHOOSE` / always-confirm delete
-- [ ] Balance calculator module (DATABASE_SCHEMA §6.1–6.2) — built here because guards need it; unit-tested with the M2 seed
+- [x] Balance calculator module (DATABASE_SCHEMA §6.1–6.2) — done early in M4
 - [ ] Tests: edge cases E15–E20b, E28
 
 **Checkpoint M5:** group lifecycle demo through API.

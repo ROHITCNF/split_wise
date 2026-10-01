@@ -10,4 +10,5 @@ export const config = Object.freeze({
   dbPath: env.DB_PATH ?? './data/app.db',
   sessionTtlDays: Number(env.SESSION_TTL_DAYS ?? 30),
   cookieSecure: env.COOKIE_SECURE === 'true',
+  authRateLimitPerMinute: Number(env.AUTH_RATE_LIMIT_PER_MINUTE ?? 10),
 });

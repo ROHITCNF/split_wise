@@ -143,3 +143,9 @@ start M2
 ## Prompt 22 — 2026-10-01
 
 Start M3 and keep updating plan.md when last Milestone is finished
+
+---
+
+## Prompt 23 — 2026-10-01
+
+start m4

@@ -6,6 +6,10 @@ import { originCheck } from './middleware/originCheck.js';
 import { loadSession } from './middleware/session.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { systemRoutes } from './modules/system/routes.js';
+import { authRoutes, devRoutes } from './modules/auth/routes.js';
+import { createConsoleMailer } from './modules/auth/mailer.js';
+import { createMockGoogleProvider } from './modules/auth/mockGoogle.js';
+import { profileRoutes } from './modules/users/routes.js';
 
 /**
  * Request pipeline shared by the real app and tests: security headers, logging,
@@ -27,18 +31,36 @@ export function applyErrorHandling(app) {
 }
 
 /**
+ * Mock Google sign-in and the console mailer are local-only (ADR-006). Production
+ * must inject real implementations; there are none yet, so it refuses to start.
+ */
+function externalServices(config, { mailer, identityProvider }) {
+  if (config.isProduction && (!mailer || !identityProvider)) {
+    throw new Error('Production needs a real mailer and identity provider; mocks are disabled.');
+  }
+  return {
+    mailer: mailer ?? createConsoleMailer(),
+    identityProvider: identityProvider ?? createMockGoogleProvider(),
+  };
+}
+
+/**
  * Builds the Express app without starting a listener, so tests can drive it with
  * Supertest against an in-memory database.
  * @param {{ sqlite: import('better-sqlite3').Database, db: object }} database
- * @param {{ config?: typeof defaultConfig }} [options]
+ * @param {{ config?: typeof defaultConfig, mailer?: object, identityProvider?: object }} [options]
  */
-export function createApp(database, { config = defaultConfig } = {}) {
-  const ctx = { ...database, config };
+export function createApp(database, { config = defaultConfig, ...services } = {}) {
+  const ctx = { ...database, config, ...externalServices(config, services) };
   const app = express();
 
   applyCoreMiddleware(app, ctx);
   app.use('/api', systemRoutes(ctx));
+  app.use('/api/auth', authRoutes(ctx));
+  app.use('/api/me', profileRoutes(ctx));
+  if (!config.isProduction) app.use('/api/dev', devRoutes(ctx));
   applyErrorHandling(app);
 
+  app.locals.ctx = ctx;
   return app;
 }

@@ -15,6 +15,7 @@ export const testConfig = Object.freeze({
   dbPath: ':memory:',
   sessionTtlDays: 30,
   cookieSecure: false,
+  authRateLimitPerMinute: 10_000,
 });
 
 /** Fresh in-memory database + config, shaped like the app's `ctx`. */
@@ -23,8 +24,9 @@ export function createTestContext() {
 }
 
 /** The real app on a test context. */
-export function createTestApp(ctx = createTestContext()) {
-  return { ctx, app: createApp(ctx, { config: ctx.config }) };
+export function createTestApp(ctx = createTestContext(), options = {}) {
+  const app = createApp(ctx, { config: ctx.config, ...options });
+  return { ctx: app.locals.ctx, app };
 }
 
 /** Core middleware + custom routes + error handling, for testing middleware in isolation. */

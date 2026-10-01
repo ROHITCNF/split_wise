@@ -2,7 +2,8 @@
 //
 // The SQL migrations in ./migrations are the source of truth for the physical schema
 // (STRICT tables, CHECK constraints, partial unique indexes — see DATABASE_SCHEMA.md §5).
-// This file mirrors only table and column names; schema.test.js fails if they drift.
+// This file mirrors table and column names (db.test.js fails if they drift) plus
+// column defaults, which Drizzle needs or it inserts explicit NULLs.
 
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
@@ -11,7 +12,7 @@ export const users = sqliteTable('users', {
   email: text('email').notNull(),
   name: text('name').notNull(),
   emailVerifiedAt: text('email_verified_at'),
-  status: text('status').notNull(),
+  status: text('status').notNull().default('active'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),
@@ -60,7 +61,7 @@ export const memberships = sqliteTable('memberships', {
   groupId: integer('group_id').notNull(),
   userId: integer('user_id').notNull(),
   role: text('role').notNull(),
-  status: text('status').notNull(),
+  status: text('status').notNull().default('active'),
   joinedAt: text('joined_at').notNull(),
   endedAt: text('ended_at'),
   endedByMembershipId: integer('ended_by_membership_id'),
@@ -76,7 +77,7 @@ export const expenses = sqliteTable('expenses', {
   amountPaise: integer('amount_paise').notNull(),
   expenseDate: text('expense_date').notNull(),
   splitMethod: text('split_method').notNull(),
-  status: text('status').notNull(),
+  status: text('status').notNull().default('active'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   updatedByMembershipId: integer('updated_by_membership_id'),
@@ -103,7 +104,7 @@ export const settlements = sqliteTable('settlements', {
   settlementDate: text('settlement_date').notNull(),
   note: text('note'),
   recordedByMembershipId: integer('recorded_by_membership_id').notNull(),
-  status: text('status').notNull(),
+  status: text('status').notNull().default('active'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   updatedByMembershipId: integer('updated_by_membership_id'),

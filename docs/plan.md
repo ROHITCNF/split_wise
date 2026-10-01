@@ -99,18 +99,27 @@ Notes:
 
 ## M3 — Server foundation
 
-- [ ] App factory (`createApp(db)`) so tests run against an in-memory/temp DB
-- [ ] Middleware: JSON body limit, helmet, request ID + pino logging, Origin check on non-GET (CSRF), rate limit on `/api/auth/*`
-- [ ] Session middleware: read `sid` cookie → hash → session row → `req.user`; sliding 30-day expiry (S-4); `requireAuth`
-- [ ] Validation helper: Zod → `400 VALIDATION_ERROR` with `fieldErrors`
-- [ ] Central error handler → API §1.1 format; unknown errors → `500 INTERNAL` (no leak)
-- [ ] Transaction helper (one transaction per command, ADR-007)
-- [ ] Shared writers used inside transactions: `recordChange`, `recordActivity`, `notify` (with message + group name snapshot)
-- [ ] Membership access helper: active member or `404` (NFR-06)
-- [ ] `GET /api/health` (H1)
-- [ ] Tests: error format, CSRF rejection, auth gate, 404 for non-member
+- [x] App factory (`createApp(db)`) so tests run against an in-memory/temp DB
+- [x] Middleware: JSON body limit, helmet, request ID + pino logging, Origin check on non-GET (CSRF), rate limit on `/api/auth/*`
+- [x] Session middleware: read `sid` cookie → hash → session row → `req.user`; sliding 30-day expiry (S-4); `requireAuth`
+- [x] Validation helper: Zod → `400 VALIDATION_ERROR` with `fieldErrors`
+- [x] Central error handler → API §1.1 format; unknown errors → `500 INTERNAL` (no leak)
+- [x] Transaction helper (one transaction per command, ADR-007)
+- [x] Shared writers used inside transactions: `recordChange`, `recordActivity`, `notify` (with message + group name snapshot)
+- [x] Membership access helper: active member or `404` (NFR-06)
+- [x] `GET /api/health` (H1)
+- [x] Tests: error format, CSRF rejection, auth gate, 404 for non-member
 
-**Checkpoint M3:** health endpoint + middleware tests green.
+Notes:
+- `ctx` = `{ sqlite, db, config }` passed to every module; routes are built as `xxxRoutes(ctx)`.
+- Validated input lands on `req.valid.body` / `req.valid.query` (Express 5 `req.query` is read-only).
+- `requireMember(ctx)` sets `req.group` + `req.membership`; `requireAdmin` → 403 for members. Non-members and past members get 404.
+- Rate limiter (`authRateLimit`) built and tested here; mounted on auth routes in M4.
+- Logs: pino JSON (pretty in dev, silent in tests), request ID in `X-Request-Id`, cookies/passwords/tokens redacted.
+- Test helpers in `server/src/test/helpers.js` (in-memory DB, fixtures, `loginCookie`).
+- 58 server tests.
+
+**Checkpoint M3 ✅:** health endpoint + middleware tests green.
 
 ---
 

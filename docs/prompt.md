@@ -185,3 +185,9 @@ start m10 m11 and m12 all together
 ## Prompt 29 — 2026-10-01
 
 /caveman : while creating account remove the verify link flow as for mvp i feel it's littile more complex . dircetly save the data and assume the user is verified
+
+---
+
+## Prompt 30 — 2026-10-01
+
+/caveman : can u dump some multiple data in sqlite db so that while presenting it looks nice. Discuss it shouldn't break anything

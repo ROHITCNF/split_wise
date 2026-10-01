@@ -1,6 +1,6 @@
 // Deletes the local SQLite database, re-creates the schema and loads seed data.
-import fs from 'node:fs';
 import { config } from '../src/config.js';
+import { backupThenRemove } from './safe-reset.js';
 import { openDatabase } from '../src/db/connection.js';
 import { seed, SEED_PASSWORD } from '../src/db/seed.js';
 
@@ -9,9 +9,8 @@ if (config.isProduction) {
   process.exit(1);
 }
 
-for (const suffix of ['', '-wal', '-shm']) {
-  fs.rmSync(`${config.dbPath}${suffix}`, { force: true });
-}
+console.warn('Stop `npm run dev` first if it is running — it keeps using the old database file.');
+await backupThenRemove(config.dbPath);
 
 const { sqlite } = openDatabase(config.dbPath);
 await seed(sqlite);

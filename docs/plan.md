@@ -352,6 +352,9 @@ Notes:
 
 - [x] **CR-1 (2026-10-01): remove email verification for the MVP.** Signup now creates a verified account and logs in (`201 { user }` + session). Removed: verify-email (A2), resend (A3), dev outbox (X1), console mailer, `email_verification_tokens` (migration `0002_drop_email_verification.sql`), `EMAIL_NOT_VERIFIED` / `TOKEN_INVALID_OR_EXPIRED`, Verify page and "check your email" screen. Signup on any existing email (incl. Google-only) → `409 EMAIL_ALREADY_REGISTERED`. Docs: REQUIREMENTS v1.3, API_CONTRACT, DATABASE_SCHEMA, DOMAIN_MODEL W1, ADR-006, ARCHITECTURE, WIREFRAMES. Accepted risk recorded as D-19.
 
+- [x] **CR-2 (2026-10-01): presentation data.** `npm run db:demo` = base seed + `server/src/db/demoSeed.js`: 6 more users (all `password123`), 5 more groups (Office Lunch Club, Manali Trip 2026, Flatmates – Koramangala, Mom's Birthday Gift, Weekend Cricket), ~3 months of expenses in all split methods, payments, one edit, one delete, a member who left (frozen expenses), a fully settled group and unread notifications. Built through the real services with a backdated clock (`lib/time.js#atTime`) so all rules, history, activity and notifications are genuine. Base `seed()` unchanged (tests depend on it); guarded by `demoSeed.test.js`.
+- [x] **Incident (2026-10-01):** running `db:demo` replaced the database the product owner's dev server was using, and a broad `pkill` stopped that server — their manual test data was lost. Fix: `db:reset` / `db:demo` now back up the current DB to `server/data/backups` before deleting it and warn to stop `npm run dev` first.
+
 ## TODO — revisit later
 
 - [ ] **D-19 follow-up (security):** decide whether a Google sign-in that merges into an existing password account should drop that password and end its sessions (pre-account-hijacking mitigation while there's no email verification).

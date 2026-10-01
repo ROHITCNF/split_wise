@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:reset": "node --env-file-if-exists=.env scripts/db-reset.js",
+    "db:demo": "node --env-file-if-exists=.env scripts/db-demo.js",
     "db:backup": "node --env-file-if-exists=.env scripts/db-backup.js"
   },
   "dependencies": {
